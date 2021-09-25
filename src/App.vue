@@ -1,18 +1,33 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div></div>
+    <button v-on:click="onPlay">{{ playingText }}</button>
+    <ClickTracks msg="My name is Shaan" />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import ClickTracks from './components/ClickTracks.vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
+    name: 'App',
+    components: {
+        ClickTracks
+    },
+    props: ['spotify'],
+    data() {
+        return {
+            playing: false,
+        };
+    },
+    computed: {
+        playingText: function() { return this.playing ? 'Stop' : 'Play'; },
+    },
+    methods: {
+        onPlay: function() { this.playing = !this.playing; },
+        onReset: function() { this.spotify.seek(0); },
+    }
 }
 </script>
 
