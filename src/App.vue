@@ -4,10 +4,10 @@
     <div></div>
     <button v-on:click="onPlay">{{ playingText }}</button>
     <ClickTracks :clickTracks="clickTracks" />
-    <div>Click Events
+    <div id="events">Click Events
         <ul>
             <li v-for="event in eventTimeline" :key="event.id">
-                {{ event.type }} {{ event.time }}
+                {{ event.time.toFixed(3) }} {{ event.type }}
             </li>
         </ul>
     </div>
@@ -68,5 +68,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+#events {
+    text-align: left;
 }
 </style>
