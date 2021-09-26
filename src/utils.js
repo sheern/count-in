@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid'
+import { EventType } from './constants'
 
 export function computeSecondsPerClick(bpm) {
     return 60.0 / bpm
@@ -22,7 +23,7 @@ export function computeEventTimeline(clickTracks) {
 }
 
 function createSongStartEvent(startTime) {
-    return createEvent('SONG_START', startTime)
+    return createEvent(EventType.SONG_START, startTime)
 }
 
 function createClickEventsForTrack(clickTrack, offsetInSeconds) {
@@ -30,7 +31,7 @@ function createClickEventsForTrack(clickTrack, offsetInSeconds) {
     let absoluteStartTime = clickTrack.startTime + offsetInSeconds
     let clickEvents = []
     for (let beat = 0; beat < clickTrack.count; beat++) {
-        clickEvents.push(createEvent('CLICK', absoluteStartTime + (beat * secondsPerClick)))
+        clickEvents.push(createEvent(EventType.CLICK, absoluteStartTime + (beat * secondsPerClick)))
     }
     return clickEvents
 }

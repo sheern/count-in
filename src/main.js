@@ -1,32 +1,28 @@
 import Vue from 'vue'
 import App from './App.vue'
+import { TOKEN } from './constants'
 
 Vue.config.productionTip = false
-
-const app = new Vue({
-    render(h) {
-        return h(App, {
-            props: {
-                spotify: this.spotify,
-            },
-        })
-    },
-    data: {
-        spotify: null,
-    },
-})
 
 // Load Spotify player into Vue app instance
 window.onSpotifyWebPlaybackSDKReady = () => {
     console.log('Loaded Spotify')
-    const token = 'BQAvCmX1Ks5uRppyXuGWvpdDYshCbANS8JSGIs8S7bHN7_BZhbua3t_W_eaDa9c_0oFdLQWxNR0rLPekfTq8NQFZybCK0UyAOsy3TCXBKQUedBbR4FrL-TSX8gk1-jOqwJvb-RNebxIrzHuRt31UvV3Datzu91k'
-    app.spotify = new window.Spotify.Player({
+    let spotify = new window.Spotify.Player({
         name: 'Count In',
-        getOAuthToken: cb => { cb(token) },
+        getOAuthToken: cb => { cb(TOKEN) },
         volume: 0.5,
     })
+    spotify.connect()
 
-    app.spotify.connect()
+    new Vue({
+        render(h) {
+            return h(App, {
+                props: {
+                    spotify,
+                    audioCtx: new AudioContext(),
+                },
+            })
+        },
+    }).$mount('#app')
 }
 
-app.$mount('#app')
