@@ -3,31 +3,60 @@
     <img alt="Vue logo" src="./assets/logo.png">
     <div></div>
     <button v-on:click="onPlay">{{ playingText }}</button>
-    <ClickTracks msg="My name is Shaan" />
+    <ClickTracks :clickTracks="clickTracks" />
+    <div>Click Events
+        <ul>
+            <li v-for="event in eventTimeline" :key="event.id">
+                {{ event.type }} {{ event.time }}
+            </li>
+        </ul>
+    </div>
   </div>
 </template>
 
 <script>
 import ClickTracks from './components/ClickTracks.vue'
+import { computeEventTimeline, createClickTrack } from './utils'
 
 export default {
     name: 'App',
     components: {
-        ClickTracks
+        ClickTracks,
     },
-    props: ['spotify'],
+    props: ['spotify', 'audioCtx'],
     data() {
         return {
             playing: false,
-        };
+            // Upon pressing play, the most negative click track should be treated as 0 in the timeline
+            // We can precompute and schedule all the clicks in the AudioContext
+            // TODO Or setInterval like cwilso's metronome and only schedule soon-to-arrive clicks
+            clickTracks: [ createClickTrack() ],
+        }
     },
     computed: {
-        playingText: function() { return this.playing ? 'Stop' : 'Play'; },
+        playingText: function() { return this.playing ? 'Stop' : 'Play' },
+        eventTimeline() {
+            return computeEventTimeline(this.clickTracks)
+        },
     },
     methods: {
-        onPlay: function() { this.playing = !this.playing; },
-        onReset: function() { this.spotify.seek(0); },
-    }
+        onPlay: function() {
+            this.playing = !this.playing
+            if (this.playing) {
+                let eventTimeline = this.eventTimeline
+                console.log(eventTimeline)
+            }
+            else {
+                this.spotify.pause()
+            }
+        },
+        onReset: function() { this.spotify.seek(0) },
+
+        scheduleSong(delay) {
+            setTimeout(() => this.spotify.resume(), delay * 1000)
+        },
+
+    },
 }
 </script>
 
