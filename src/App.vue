@@ -34,13 +34,13 @@ export default {
         }
     },
     computed: {
-        playingText: function() { return this.playing ? 'Stop' : 'Play' },
+        playingText() { return this.playing ? 'Stop' : 'Play' },
         eventTimeline() {
             return computeEventTimeline(this.clickTracks)
         },
     },
     methods: {
-        onPlay: function() {
+        onPlay() {
             this.playing = !this.playing
             if (this.playing) {
                 let eventTimeline = this.eventTimeline
@@ -50,7 +50,7 @@ export default {
                 this.spotify.pause()
             }
         },
-        onReset: function() { this.spotify.seek(0) },
+        onReset() { this.spotify.seek(0) },
 
         scheduleSong(delay) {
             setTimeout(() => this.spotify.resume(), delay * 1000)

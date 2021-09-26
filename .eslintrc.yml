@@ -30,3 +30,6 @@ rules:
   comma-dangle:
     - error
     - objects: 'always-multiline'
+  object-shorthand:
+    - error
+    - always
