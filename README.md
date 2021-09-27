@@ -1,4 +1,5 @@
-# count-in
+# Count In
+Play music with a metronome count-in. No more scrambling after pressing play.
 
 ## Project setup
 ```
