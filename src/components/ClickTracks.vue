@@ -1,8 +1,6 @@
 <template>
     <div>
-        <ul>
-            <ClickTrack v-for="cl in clickTracks" :clickTrack="cl" :key="cl.id" />
-        </ul>
+        <ClickTrack v-for="cl in clickTracks" :clickTrack="cl" :key="cl.id" />
         <button v-on:click="addClickTrack">Add click track</button>
     </div>
 </template>
@@ -24,3 +22,4 @@ export default {
     },
 }
 </script>
+

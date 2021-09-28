@@ -26,7 +26,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
                 props: {
                     spotifyPlayer,
                     spotifyApi,
-                    audioCtx: new AudioContext(),
+                    token: TOKEN,
                 },
             })
         },

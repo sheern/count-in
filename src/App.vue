@@ -1,132 +1,22 @@
 <template>
     <div id="app">
-        <img alt="Vue logo" src="./assets/logo.png">
-        <div></div>
-        <h4>Use Spotify Connect from the desktop client or phone to control the current song</h4>
-        <div id="Controls">
-            <button v-on:click="onPlay">{{ playingText }}</button>
-            <button v-on:click="onReset">Reset</button>
-        </div>
-        <h4 v-if="currentSong">
-            Spotify says the tempo is {{ currentSong.tempo }} in time signature {{ currentSong.timeSignature }}/4
-        </h4>
-        <ClickTracks :clickTracks="clickTracks" />
-        <div id="events">Timeline Events
-            <ul>
-                <li v-for="event in eventTimeline" :key="event.id">
-                    {{ event.time.toFixed(6) }} {{ event.type }}
-                </li>
-            </ul>
-        </div>
+        <img width="150" height="150" alt="Vue logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png">
+        <Login v-if="!token" />
+        <Main v-else :token="token" :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
     </div>
 </template>
 
 <script>
-import ClickTracks from './components/ClickTracks.vue'
-import { computeEventTimeline, createClickTrack } from './utils'
-import { EventType } from './constants.js'
+import Login from './components/Login.vue'
+import Main from './components/Main.vue'
 
 export default {
     name: 'App',
     components: {
-        ClickTracks,
+        Login,
+        Main,
     },
-    props: ['spotifyPlayer', 'spotifyApi', 'audioCtx'],
-    data() {
-        return {
-            playing: false,
-            songId: 0,
-            currentSong: null,
-            // Upon pressing play, the most negative click track should be treated as 0 in the timeline
-            // We can precompute and schedule all the clicks in the AudioContext
-            // TODO Or setInterval like cwilso's metronome and only schedule soon-to-arrive clicks
-            clickTracks: [ createClickTrack() ],
-        }
-    },
-    watch: {
-        songId(newSongId) {
-            if (!newSongId)
-                return
-
-            let app = this
-            console.log('test')
-            // Use audio analysis endpoint instead
-            this.spotifyApi.getAudioFeaturesForTrack(newSongId)
-                .then(({ tempo, time_signature }) => {
-                    app.currentSong = {
-                        tempo,
-                        timeSignature: time_signature,
-                    }
-                })
-        },
-    },
-    computed: {
-        playingText() { return this.playing ? 'Stop' : 'Play' },
-        eventTimeline() {
-            return computeEventTimeline(this.clickTracks)
-        },
-    },
-    methods: {
-        onPlay() {
-            this.playing = !this.playing
-
-            if (this.playing) {
-                this.audioCtx.resume()
-                let eventTimeline = this.eventTimeline
-                eventTimeline.forEach(this.scheduleEvent)
-            }
-            else {
-                // TODO once I have an event loop, I would stop it here
-                // Maintain track position so user can resume
-                this.spotifyPlayer.pause()
-            }
-        },
-        onReset() {
-            this.spotifyPlayer.pause()
-            this.spotifyPlayer.seek(0)
-        },
-
-        scheduleEvent(event) {
-            if (event.type === EventType.CLICK) {
-                // schedule click in audioCtx
-                this.scheduleClick(event.time)
-            }
-            else if (event.type === EventType.SONG_START) {
-                this.scheduleSong(event.time)
-            }
-            else {
-                console.warn(`Cannot process event of type ${event.type}`)
-            }
-        },
-        scheduleSong(delay) {
-            setTimeout(() => this.spotifyPlayer.resume(), delay * 1000)
-        },
-        // TODO I should instead have everything relative to the time
-        // the play button was pressed for rock-solid timing
-        scheduleClick(time) {
-            let audioCtx = this.audioCtx
-            let osc = audioCtx.createOscillator()
-            osc.frequency.value = 440
-            osc.connect(audioCtx.destination)
-
-            let currentTime = audioCtx.currentTime
-            osc.start(currentTime + time)
-            osc.stop(currentTime + time + 0.05)
-        },
-    },
-    created() {
-        console.log('Adding playback state handler to listen for song changes')
-        let app = this
-        this.spotifyPlayer.addListener('player_state_changed',
-            ({ track_window: { current_track } }) => {
-                if (current_track) {
-                    console.log(current_track.name)
-                    // does this still propagate to dependents when the value is the same as before?
-                    // answer: NO, it's smart and propagates if value changed
-                    app.songId = current_track.id
-                }
-            })
-    },
+    props: ['spotifyPlayer', 'spotifyApi', 'token'],
 }
 </script>
 

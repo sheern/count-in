@@ -1,5 +1,5 @@
 <template>
-    <li>
+    <div class="click-track">
         <!-- TODO validation (e.g. bpm > 0) -->
         <input class="num-input" v-model.number="clickTrack.bpm" type="number">
         <span class="units">BPM ({{ secondsPerClick.toFixed(3) }}s per click)</span>
@@ -9,9 +9,9 @@
 
         <span>Start at </span>
         <input class="num-input" v-model.number="clickTrack.startTime" type="number">
-        <span class="units">s (relative to song)</span>
-        <input id="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="-5" max="10" step="0.01">
-    </li>
+        <span class="units">s</span>
+        <input id="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="0" max="20" step="0.01">
+    </div>
 </template>
 
 <script>
@@ -26,17 +26,9 @@ export default {
 }
 </script>
 
-<style scoped>
-.num-input {
-    width: 4em;
-}
-
-.units {
-    padding-left: 0.25em;
-    padding-right: 2em;
-}
-
-#start-time-slider {
-    width: 20em;
+<style>
+.click-track {
+    padding-top: 1em;
+    padding-bottom: 1em;
 }
 </style>
