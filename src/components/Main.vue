@@ -1,15 +1,13 @@
 <template>
     <div id="main">
         <h4>Use Spotify Connect from the desktop client or phone to control the current song</h4>
-        <div id="controls">
-            <button v-on:click="onPlay">{{ playingText }}</button>
-            <button v-on:click="onReset">Reset</button>
-        </div>
+
+        <Player :spotifyPlayer="spotifyPlayer" :audioCtx="audioCtx" :eventTimeline="eventTimeline" />
+
         <span>Start song at </span>
         <input class="num-input" v-model.number="songStartTime" type="number">
         <span class="units">s</span>
-        <input id="start-time-slider" v-model.number="songStartTime" type="range" min="0" max="20" step="0.01">
-
+        <input id="start-time-slider" v-model.number="songStartTime" type="range" min="0" max="300" step="0.01">
 
         <ClickTracks :clickTracks="clickTracks" />
         <h4 v-if="currentSong">
@@ -29,6 +27,7 @@
 
 <script>
 import ClickTracks from './ClickTracks.vue'
+import Player from './Player.vue'
 import { computeEventTimeline, createClickTrack } from '../utils'
 import { EventType } from '../constants.js'
 
@@ -36,11 +35,11 @@ export default {
     name: 'Main',
     components: {
         ClickTracks,
+        Player,
     },
     props: ['spotifyPlayer', 'spotifyApi', 'token'],
     data() {
         return {
-            playing: false,
             songStartTime: 2,
             songId: 0,
             currentSong: null,
@@ -52,7 +51,6 @@ export default {
         }
     },
     computed: {
-        playingText() { return this.playing ? 'Stop' : 'Play' },
         eventTimeline() {
             return computeEventTimeline(this.clickTracks, this.songStartTime)
         },
@@ -72,54 +70,6 @@ export default {
                         timeSignature: time_signature,
                     }
                 })
-        },
-    },
-    methods: {
-        onPlay() {
-            this.playing = !this.playing
-
-            if (this.playing) {
-                this.audioCtx.resume()
-                let eventTimeline = this.eventTimeline
-                eventTimeline.forEach(this.scheduleEvent)
-            }
-            else {
-                // TODO once I have an event loop, I would stop it here
-                // Maintain track position so user can resume
-                this.spotifyPlayer.pause()
-            }
-        },
-        onReset() {
-            this.spotifyPlayer.pause()
-            this.spotifyPlayer.seek(0)
-        },
-
-        scheduleEvent(event) {
-            if (event.type === EventType.CLICK) {
-                // schedule click in audioCtx
-                this.scheduleClick(event.time)
-            }
-            else if (event.type === EventType.SONG_START) {
-                this.scheduleSong(event.time)
-            }
-            else {
-                console.warn(`Cannot process event of type ${event.type}`)
-            }
-        },
-        scheduleSong(delay) {
-            setTimeout(() => this.spotifyPlayer.resume(), delay * 1000)
-        },
-        // TODO I should instead have everything relative to the time
-        // the play button was pressed for rock-solid timing
-        scheduleClick(time) {
-            let audioCtx = this.audioCtx
-            let osc = audioCtx.createOscillator()
-            osc.frequency.value = 440
-            osc.connect(audioCtx.destination)
-
-            let currentTime = audioCtx.currentTime
-            osc.start(currentTime + time)
-            osc.stop(currentTime + time + 0.05)
         },
     },
     created() {
