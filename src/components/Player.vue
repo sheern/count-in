@@ -2,12 +2,17 @@
     <div id="controls">
         <button v-on:click="onPlay">{{ playingText }}</button>
         <button v-on:click="onReset">Reset</button>
-        <span>Seek slider</span>
-        <input v-model.number="seekOffsetSeconds" type="range" min="0" max="300" step="0.01">
+        <h5>Seek slider</h5>
+        <button @click="loopMode = !loopMode">{{ loopMode ? "Exit loop mode" : "Loop mode" }}</button>
+        <!-- v-model doesn't seem to bind properly when set in a watch function (re-render happens before watch?) -->
+        <vue-slider v-model="seekValue" :interval="0.05" :max="300"
+            :max-range="maxRange" :enable-cross="false" />
     </div>
 </template>
 
 <script>
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/default.css'
 import { EventType } from '../constants.js'
 
 // Event loop frequency
@@ -17,10 +22,14 @@ const LOOKAHEAD = INTERVAL * 1.25
 
 export default {
     name: 'Player',
+    components: {
+        VueSlider,
+    },
     props: ['spotifyPlayer', 'audioCtx', 'eventTimeline'],
     data() {
         return {
             playing: false,
+            loopMode: false,
             // The time we use to schedule events
             audioCtxStartTime: 0,
             nextEvent: 0,
@@ -31,6 +40,18 @@ export default {
         }
     },
     computed: {
+        maxRange() {
+            return this.loopMode ? 50 : 0.01
+        },
+        seekValue: {
+            get() {
+                console.log('getting')
+                return this.loopMode ? [0, 10] : 0
+            },
+            set(newValue) {
+                console.log(newValue)
+            },
+        },
         playingText() { return this.playing ? 'Stop' : 'Play' },
     },
     methods: {

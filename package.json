@@ -11,7 +11,8 @@
     "core-js": "^3.6.5",
     "spotify-web-api-js": "^1.5.1",
     "uuid": "^8.3.2",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vue-slider-component": "^3.2.14"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
