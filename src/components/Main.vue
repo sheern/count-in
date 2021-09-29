@@ -2,6 +2,9 @@
     <div id="main">
         <h4>Use Spotify Connect from the desktop client or phone to control the current song</h4>
 
+        <Timeline v-if="currentSong" :timelineLength="currentSong.duration"
+        :songStartTime="songStartTime" :clickTracks="clickTracks" />
+
         <Player :spotifyPlayer="spotifyPlayer" :audioCtx="audioCtx" :eventTimeline="eventTimeline" />
 
         <span>Start song at </span>
@@ -27,14 +30,15 @@
 
 <script>
 import ClickTracks from './ClickTracks.vue'
+import Timeline from './Timeline.vue'
 import Player from './Player.vue'
 import { computeEventTimeline, createClickTrack } from '../utils'
-import { EventType } from '../constants.js'
 
 export default {
     name: 'Main',
     components: {
         ClickTracks,
+        Timeline,
         Player,
     },
     props: ['spotifyPlayer', 'spotifyApi', 'token'],
@@ -64,10 +68,11 @@ export default {
             console.log('test')
             // Use audio analysis endpoint instead
             this.spotifyApi.getAudioFeaturesForTrack(newSongId)
-                .then(({ tempo, time_signature }) => {
+                .then(({ tempo, time_signature, duration_ms }) => {
                     app.currentSong = {
                         tempo,
                         timeSignature: time_signature,
+                        duration: duration_ms / 1000.0,
                     }
                 })
         },
