@@ -1,6 +1,7 @@
 <template>
     <div>
-        <ClickTrack v-for="cl in clickTracks" :clickTrack="cl" :key="cl.id" />
+        <ClickTrack v-for="(cl, index) in clickTracks" :clickTrack="cl"
+        v-on:remove="clickTracks.splice(index, 1)" :key="cl.id" />
         <button v-on:click="addClickTrack">Add click track</button>
     </div>
 </template>
