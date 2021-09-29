@@ -32,13 +32,15 @@ export default {
         return {
             playing: false,
             loopMode: false,
-            // The time we use to schedule events
-            audioCtxStartTime: 0,
-            nextEvent: 0,
             sliderValue: 0,
             // The offset applied to elapsed time
             // This is non-zero when pausing the track or seeking to a point in the track
             seekOffsetSeconds: 0,
+
+            // The time we use to schedule events
+            audioCtxStartTime: 0,
+            nextEvent: 0,
+            // setTimeout id of the song resume
             songScheduleId: 0,
         }
     },
@@ -55,6 +57,7 @@ export default {
             }
         },
     },
+    computed: {
         playingText() { return this.playing ? 'Stop' : 'Play' },
     },
     methods: {
