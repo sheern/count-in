@@ -5,8 +5,10 @@
         <h5>Seek slider</h5>
         <button @click="loopMode = !loopMode">{{ loopMode ? "Exit loop mode" : "Loop mode" }}</button>
         <!-- v-model doesn't seem to bind properly when set in a watch function (re-render happens before watch?) -->
-        <vue-slider v-model="seekValue" :interval="0.05" :max="300"
-            :max-range="maxRange" :enable-cross="false" />
+        <!-- ACTUALLY when not touching start value, the component doesn't rerender even when leaving loop mode. WTF! -->
+        <!-- Maybe have 2 separate sliders? 1 for seek time, other for preview range -->
+        <vue-slider v-model="sliderValue" :interval="0.05" :max="300"
+            :max-range="50" :enable-cross="false" />
     </div>
 </template>
 
@@ -33,25 +35,26 @@ export default {
             // The time we use to schedule events
             audioCtxStartTime: 0,
             nextEvent: 0,
+            sliderValue: 0,
             // The offset applied to elapsed time
             // This is non-zero when pausing the track or seeking to a point in the track
             seekOffsetSeconds: 0,
             songScheduleId: 0,
         }
     },
-    computed: {
-        maxRange() {
-            return this.loopMode ? 50 : 0.01
+    watch: {
+        loopMode(newLoopMode) {
+            // WTF without adjusting the start value of the slider, it doesn't react to the change from range to single
+            // TODO file an issue
+            let sliderValue = this.sliderValue
+            if (newLoopMode) {
+                this.sliderValue = [sliderValue + 0.1, sliderValue + 10]
+            }
+            else {
+                this.sliderValue = sliderValue[0] - 0.1
+            }
         },
-        seekValue: {
-            get() {
-                console.log('getting')
-                return this.loopMode ? [0, 10] : 0
-            },
-            set(newValue) {
-                console.log(newValue)
-            },
-        },
+    },
         playingText() { return this.playing ? 'Stop' : 'Play' },
     },
     methods: {
@@ -60,24 +63,22 @@ export default {
 
             if (this.playing) {
                 this.audioCtx.resume()
-
                 this.audioCtxStartTime = this.audioCtx.currentTime
+
+                this.seekOffsetSeconds = this.sliderValue
                 this.seekAndScheduleSong()
                 this.eventLoop()
             }
             else {
                 // Maintain track position so user can resume
-                this.spotifyPlayer.pause()
                 this.seekOffsetSeconds = this.secondsElapsed()
-                clearTimeout(this.songScheduleId)
+                this.stopSong()
             }
         },
         onReset() {
-            this.spotifyPlayer.pause()
-            this.spotifyPlayer.seek(0)
+            this.stopSong()
             this.seekOffsetSeconds = 0
             this.nextEvent = 0
-            clearTimeout(this.songScheduleId)
         },
         // TODO do this on a web worker thread to unclog main UI thread
         eventLoop() {
@@ -96,6 +97,10 @@ export default {
             if (delayMs < 0)
                 this.spotifyPlayer.seek(-delayMs)
             this.songScheduleId = setTimeout(() => this.spotifyPlayer.resume(), Math.max(0, delayMs))
+        },
+        stopSong() {
+            clearTimeout(this.songScheduleId)
+            this.spotifyPlayer.pause()
         },
         scheduleUpcomingEvents() {
             let windowBegin = this.secondsElapsed()
