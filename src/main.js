@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import App from './App.vue'
+import App from '@/App.vue'
 import SpotifyWebApi from 'spotify-web-api-js'
-import { TOKEN } from './constants'
+import { TOKEN } from '@/constants'
 
 Vue.config.productionTip = false
 

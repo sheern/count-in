@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid'
-import { EventType } from './constants'
+import { EventType } from '@/constants'
 
 export function computeSecondsPerClick(bpm) {
     return 60.0 / bpm
