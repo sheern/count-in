@@ -1,24 +1,24 @@
 <template>
     <div id="controls">
-        <button v-on:click="onPlay">{{ playingText }}</button>
+        <button v-on:click="onPlay">{{ playing ? 'Stop' : 'Play' }}</button>
         <button v-on:click="onReset">Reset</button>
         <h5>Seek slider</h5>
-        <button @click="loopMode = !loopMode">{{ loopMode ? "Exit loop mode" : "Loop mode" }}</button>
+        <button @click="previewMode = !previewMode">{{ previewMode ? "Exit preview mode" : "Preview mode" }}</button>
         <!-- v-model doesn't seem to bind properly when set in a watch function (re-render happens before watch?) -->
-        <!-- ACTUALLY when not touching start value, the component doesn't rerender even when leaving loop mode. WTF! -->
+        <!-- ACTUALLY when not touching start value, the component doesn't rerender even when leaving preview mode. WTF! -->
         <!-- Maybe have 2 separate sliders? 1 for seek time, other for preview range -->
         <vue-slider v-model="sliderValue" :interval="0.05" :max="300"
-            :max-range="50" :enable-cross="false" />
+            :min-range="5" :max-range="50" :enable-cross="false" />
     </div>
 </template>
 
 <script>
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/default.css'
-import { EventType } from '../constants.js'
+import { EventType } from '@/constants.js'
 
 // Event loop frequency
-const INTERVAL = 75
+const INTERVAL = 200
 // Millis to look ahead when scheduling events
 const LOOKAHEAD = INTERVAL * 1.25
 
@@ -31,7 +31,7 @@ export default {
     data() {
         return {
             playing: false,
-            loopMode: false,
+            previewMode: false,
             sliderValue: 0,
             // The offset applied to elapsed time
             // This is non-zero when pausing the track or seeking to a point in the track
@@ -42,14 +42,16 @@ export default {
             nextEvent: 0,
             // setTimeout id of the song resume
             songScheduleId: 0,
+            // setTimeout id of the preview
+            previewScheduleId: 0,
         }
     },
     watch: {
-        loopMode(newLoopMode) {
+        previewMode(newPreviewMode) {
             // WTF without adjusting the start value of the slider, it doesn't react to the change from range to single
             // TODO file an issue
             let sliderValue = this.sliderValue
-            if (newLoopMode) {
+            if (newPreviewMode) {
                 this.sliderValue = [sliderValue + 0.1, sliderValue + 10]
             }
             else {
@@ -57,9 +59,7 @@ export default {
             }
         },
     },
-    computed: {
-        playingText() { return this.playing ? 'Stop' : 'Play' },
-    },
+    // TODO add a handler for seek slider release, update seekOffsetSeconds
     methods: {
         onPlay() {
             this.playing = !this.playing
@@ -68,37 +68,62 @@ export default {
                 this.audioCtx.resume()
                 this.audioCtxStartTime = this.audioCtx.currentTime
 
-                this.seekOffsetSeconds = this.sliderValue
-                this.seekAndScheduleSong()
-                this.eventLoop()
+                this.triggerEventLoop()
+                if (this.previewMode) {
+                    this.beginPreview()
+                }
+                else {
+                    this.seekAndScheduleSong()
+                }
             }
             else {
                 // Maintain track position so user can resume
                 this.seekOffsetSeconds = this.secondsElapsed()
                 this.stopSong()
+
+                clearTimeout(this.previewScheduleId)
             }
         },
         onReset() {
+            this.seekTo(0)
+        },
+        beginPreview() {
+            this.audioCtxStartTime = this.audioCtx.currentTime
+            this.seekTo(this.sliderValue[0])
+            this.seekAndScheduleSong()
+
+            if (this.playing) {
+                let previewLength = this.sliderValue[1] - this.sliderValue[0]
+                this.previewScheduleId = setTimeout(this.beginPreview, previewLength * 1000)
+            }
+        },
+        seekTo(time) {
             this.stopSong()
-            this.seekOffsetSeconds = 0
+            this.seekOffsetSeconds = time
             this.nextEvent = 0
         },
+
+
+
+
         // TODO do this on a web worker thread to unclog main UI thread
-        eventLoop() {
+        triggerEventLoop() {
             this.scheduleUpcomingEvents()
 
             if (this.playing)
-                setTimeout(this.eventLoop, INTERVAL)
+                setTimeout(this.triggerEventLoop, INTERVAL)
         },
+
+
 
         // Scheduling events
         seekAndScheduleSong() {
             let eventTime = this.getSongStartEvent().time
             let delay = eventTime - this.secondsElapsed()
             let delayMs = delay * 1000
-            // We are in the middle of the song, seek to however much we are past the start
-            if (delayMs < 0)
-                this.spotifyPlayer.seek(-delayMs)
+            // If we are in the middle of the song (i.e. delay is negative), we should seek to -delayMs
+            // If we are before the start of the song (i.e. delay is >= 0), we should seek to 0 to reset the song
+            this.spotifyPlayer.seek(Math.max(0, -delayMs))
             this.songScheduleId = setTimeout(() => this.spotifyPlayer.resume(), Math.max(0, delayMs))
         },
         stopSong() {
@@ -125,13 +150,8 @@ export default {
         },
         scheduleEvent(event) {
             if (event.type === EventType.CLICK) {
-                console.log(`Scheduling ${event.type} at ${event.time} (current time ${this.secondsElapsed()})`)
                 this.scheduleClick(event.time)
             }
-        },
-        scheduleSong(time) {
-            let delay = time - this.secondsElapsed()
-            setTimeout(() => this.spotifyPlayer.resume(), delay * 1000)
         },
         scheduleClick(time) {
             let osc = this.audioCtx.createOscillator()
