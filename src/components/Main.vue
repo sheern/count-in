@@ -65,7 +65,6 @@ export default {
                 return
 
             let app = this
-            console.log('test')
             // Use audio analysis endpoint instead
             this.spotifyApi.getAudioFeaturesForTrack(newSongId)
                 .then(({ tempo, time_signature, duration_ms }) => {
@@ -83,7 +82,6 @@ export default {
         this.spotifyPlayer.addListener('player_state_changed',
             ({ track_window: { current_track } }) => {
                 if (current_track) {
-                    console.log(current_track.name)
                     // does this still propagate to dependents when the value is the same as before?
                     // answer: NO, it's smart and propagates if value changed
                     app.songId = current_track.id
