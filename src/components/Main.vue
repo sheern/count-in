@@ -32,7 +32,7 @@
 import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
 import Player from '@/components/Player.vue'
-import { computeEventTimeline, createClickTrack } from '@/components/utils'
+import { computeEventTimeline, createClickTrack } from '@/utils'
 
 export default {
     name: 'Main',
