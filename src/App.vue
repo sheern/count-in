@@ -3,12 +3,13 @@
         <div v-if="!loading">
         <img width="150" height="150" alt="Vue logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png">
 
-        <Login v-if="!this.$root.$data.token" />
-        <Main v-else-if="this.spotifyPlayer && this.spotifyApi" :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
+            <Login v-if="!this.$root.$data.token" />
+            <Main v-else-if="this.spotifyPlayer && this.spotifyApi" :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
         </div>
 
         <!-- Waiting for Spotify token -->
         <div v-else>
+            Waiting for Spotify access token
         </div>
     </div>
 </template>
@@ -37,10 +38,10 @@ export default {
     methods: {
         prepareSpotifyPlayer() {
             const app = this
-            const token = app.$root.$data.token
             const player = new window.Spotify.Player({
                 name: 'Count In',
                 getOAuthToken: cb => {
+                    const token = app.$root.$data.token
                     cb(token)
                 },
                 volume: 0.5,
@@ -73,15 +74,12 @@ export default {
 
                     const token = res.data.access_token
                     this.$root.$data.token = token
-                    this.loading = false
 
-                    // Load Web Playback
                     const script = document.createElement('script')
                     script.src = 'https://sdk.scdn.co/spotify-player.js'
 
-                    script.async = true
-
                     document.body.appendChild(script)
+
                     window.onSpotifyWebPlaybackSDKReady = this.prepareSpotifyPlayer
 
                     // Instantiate Web API
@@ -90,11 +88,14 @@ export default {
                     this.spotifyApi = spotifyApi
 
                     // Redirect to / without refresh
+                    this.loading = false
                     window.history.pushState(null, '', '/')
                 })
                 .catch(() => {
                     // Redirect to login page
-                    window.location = '/'
+                    console.warn('Could not authenticate user, redirecting back to login page')
+                    this.loading = false
+                    window.history.pushState(null, '', '/')
                 })
         }
     },
