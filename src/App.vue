@@ -1,10 +1,13 @@
 <template>
     <div id="app">
         <div v-if="!loading">
-        <img width="150" height="150" alt="Vue logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png">
-
             <Login v-if="!this.$root.$data.token" />
-            <Main v-else-if="this.spotifyPlayer && this.spotifyApi" :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
+            <div v-else>
+                <div v-if="isConnected">
+                    <Main :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
+                </div>
+                <h3 v-else>Connect to Count Me In from the desktop or mobile Spotify app</h3>
+            </div>
         </div>
 
         <!-- Waiting for Spotify token -->
@@ -27,6 +30,7 @@ export default {
     data() {
         return {
             loading: false,
+            isConnected: false,
             spotifyPlayer: null,
             spotifyApi: null,
         }
@@ -53,9 +57,10 @@ export default {
                 console.log('Ready with Device ID', device_id)
             })
 
-            player.addListener('not_ready', ({ device_id }) => {
-                console.log('Device ID has gone offline', device_id)
-            })
+            player.addListener('player_state_changed',
+                function connectedChecker(state) {
+                    app.isConnected = !!state
+                })
 
             player.connect()
         },

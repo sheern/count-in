@@ -22,6 +22,14 @@ export function tokenEndpointBody(authCode) {
     }
 }
 
+export function refreshTokenEndpointBody(refreshToken) {
+    return {
+        client_id: CLIENT_ID,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+    }
+}
+
 export function setCodeVerifier(codeVerifier) {
     localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier)
 }
