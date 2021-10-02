@@ -1,13 +1,13 @@
 <template>
-    <div id="controls">
+    <div class="controls">
         <button v-on:click="onPlay">{{ playing ? 'Stop' : 'Play' }}</button>
         <button v-on:click="onReset">Reset</button>
-        <h5>Seek slider</h5>
         <button @click="previewMode = !previewMode">{{ previewMode ? "Exit preview mode" : "Preview mode" }}</button>
+        <h5>Seek slider</h5>
         <!-- v-model doesn't seem to bind properly when set in a watch function (re-render happens before watch?) -->
         <!-- ACTUALLY when not touching start value, the component doesn't rerender even when leaving preview mode. WTF! -->
         <!-- Maybe have 2 separate sliders? 1 for seek time, other for preview range -->
-        <vue-slider v-model="sliderValue" :interval="0.05" :max="300"
+        <vue-slider class="seek-slider" v-model="sliderValue" :interval="0.05" :max="300"
             :min-range="5" :max-range="50" :enable-cross="false" />
     </div>
 </template>
@@ -27,7 +27,7 @@ export default {
     components: {
         VueSlider,
     },
-    props: ['spotifyPlayer', 'audioCtx', 'eventTimeline'],
+    props: ['spotifyPlayer', 'audioCtx', 'eventTimeline', 'songStartTime'],
     data() {
         return {
             playing: false,
@@ -44,6 +44,8 @@ export default {
             songScheduleId: 0,
             // setTimeout id of the preview
             previewScheduleId: 0,
+            // setTimeout id of the event loop
+            eventLoopId: 0,
         }
     },
     watch: {
@@ -98,9 +100,12 @@ export default {
             }
         },
         seekTo(time) {
+            // Prevent seeking to negative times
+            const safeTime = Math.max(0, time)
             this.stopSong()
-            this.seekOffsetSeconds = time
+            this.seekOffsetSeconds = safeTime
             this.nextEvent = 0
+            this.refreshEventLoop()
         },
 
 
@@ -111,15 +116,18 @@ export default {
             this.scheduleUpcomingEvents()
 
             if (this.playing)
-                setTimeout(this.triggerEventLoop, INTERVAL)
+                this.eventLoopId = setTimeout(this.triggerEventLoop, INTERVAL)
+        },
+        refreshEventLoop() {
+            clearTimeout(this.eventLoopId)
+            this.triggerEventLoop()
         },
 
 
 
         // Scheduling events
         seekAndScheduleSong() {
-            let eventTime = this.getSongStartEvent().time
-            let delay = eventTime - this.secondsElapsed()
+            let delay = this.songStartTime - this.secondsElapsed()
             let delayMs = delay * 1000
             // If we are in the middle of the song (i.e. delay is negative), we should seek to -delayMs
             // If we are before the start of the song (i.e. delay is >= 0), we should seek to 0 to reset the song
@@ -167,9 +175,6 @@ export default {
 
         secondsElapsed() {
             return this.seekOffsetSeconds + (this.audioCtx.currentTime - this.audioCtxStartTime)
-        },
-        getSongStartEvent() {
-            return this.eventTimeline.find(event => event.type === EventType.SONG_START)
         },
     },
 }
