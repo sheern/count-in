@@ -1,24 +1,33 @@
 <template>
-    <div id="main">
-        <h4>Use Spotify Connect from the desktop client or phone to control the current song</h4>
+    <div class="main">
+        <div class="song-details" v-if="currentSongDetails">
+            <img width="200" height="200" alt="Song image" :src="currentSongDetails.imageUrl">
+            <h2>{{ currentSongDetails.songName }}</h2>
+            <h3 style="color: #999">{{ currentSongDetails.artistName }}</h3>
+        </div>
+        <div v-if="currentSongAnalysis">
+            <Timeline :songDuration="currentSongAnalysis.duration"
+                :songStartTime="songStartTime" :clickTracks="clickTracks" />
+            <h4>
+                Spotify says the tempo is {{ currentSongAnalysis.tempo }} in time signature {{ currentSongAnalysis.timeSignature }}/4
+            </h4>
+        </div>
 
-        <Timeline v-if="currentSong" :timelineLength="currentSong.duration"
-        :songStartTime="songStartTime" :clickTracks="clickTracks" />
-
-        <Player :spotifyPlayer="spotifyPlayer" :audioCtx="audioCtx" :eventTimeline="eventTimeline" />
+        <Player :spotifyPlayer="spotifyPlayer" :audioCtx="audioCtx" :eventTimeline="eventTimeline" :songStartTime="songStartTime" />
 
         <span>Start song at </span>
         <input class="num-input" v-model.number="songStartTime" type="number">
         <span class="units">s</span>
-        <input id="start-time-slider" v-model.number="songStartTime" type="range" min="0" max="300" step="0.01">
+        <input class="start-time-slider" v-model.number="songStartTime" type="range" min="0" max="15" step="0.01">
 
-        <ClickTracks :clickTracks="clickTracks" />
-        <h4 v-if="currentSong">
-            Spotify says the tempo is {{ currentSong.tempo }} in time signature {{ currentSong.timeSignature }}/4
-        </h4>
+        <ClickTracks :clickTracks="clickTracks" :currentSong="currentSongAnalysis" :songStartTime="songStartTime"/>
 
+        <!-- <button @click="onSave">Save</button> -->
+        <!-- <select name=""> -->
+        <!--     <option v-for -->
+        <!-- <button @click="onLoad">Load</button> -->
 
-        <div id="events">Timeline Events
+        <div class="events">Timeline Events
             <ul>
                 <li v-for="event in eventTimeline" :key="event.id">
                     {{ event.time.toFixed(6) }} {{ event.type }}
@@ -32,7 +41,7 @@
 import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
 import Player from '@/components/Player.vue'
-import { computeEventTimeline, createClickTrack } from '@/utils'
+import { computeEventTimeline } from '@/utils'
 
 export default {
     name: 'Main',
@@ -41,16 +50,17 @@ export default {
         Timeline,
         Player,
     },
-    props: ['spotifyPlayer', 'spotifyApi', 'token'],
+    props: ['spotifyPlayer', 'spotifyApi'],
     data() {
         return {
             songStartTime: 2,
             songId: 0,
-            currentSong: null,
+            currentSongDetails: null,
+            currentSongAnalysis: null,
             // Upon pressing play, the most negative click track should be treated as 0 in the timeline
             // We can precompute and schedule all the clicks in the AudioContext
             // TODO Or setInterval like cwilso's metronome and only schedule soon-to-arrive clicks
-            clickTracks: [ createClickTrack() ],
+            clickTracks: [],
             audioCtx: new AudioContext(),
         }
     },
@@ -68,7 +78,7 @@ export default {
             // Use audio analysis endpoint instead
             this.spotifyApi.getAudioFeaturesForTrack(newSongId)
                 .then(({ tempo, time_signature, duration_ms }) => {
-                    app.currentSong = {
+                    app.currentSongAnalysis = {
                         tempo,
                         timeSignature: time_signature,
                         duration: duration_ms / 1000.0,

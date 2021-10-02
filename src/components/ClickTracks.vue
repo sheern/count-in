@@ -1,7 +1,7 @@
 <template>
     <div>
         <ClickTrack v-for="(cl, index) in clickTracks" :clickTrack="cl"
-        v-on:remove="clickTracks.splice(index, 1)" :key="cl.id" />
+        v-on:remove="clickTracks.splice(index, 1)" :songDuration="currentSong.duration" :songStartTime="songStartTime" :key="cl.id" />
         <button v-on:click="addClickTrack">Add click track</button>
     </div>
 </template>
@@ -15,10 +15,11 @@ export default {
     components: {
         ClickTrack,
     },
-    props: [ 'clickTracks' ],
+    props: [ 'clickTracks', 'currentSong', 'songStartTime' ],
     methods: {
         addClickTrack() {
-            this.clickTracks.push(createClickTrack())
+            const { tempo = 120, timeSignature = 4 } = this.currentSong || {}
+            this.clickTracks.push(createClickTrack(0, tempo, timeSignature))
         },
     },
 }

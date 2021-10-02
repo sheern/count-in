@@ -10,18 +10,26 @@
         <span>Start at </span>
         <input class="num-input" v-model.number="clickTrack.startTime" type="number">
         <span class="units">s</span>
-        <input id="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="0" max="300" step="0.01">
+        <input class="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="0" :max="maxStartTime" step="0.01">
         <button v-on:click="$emit('remove')">Remove</button>
     </div>
 </template>
 
 <script>
+import { computeSecondsPerClick } from '@/utils'
+
 export default {
     name: 'ClickTrack',
-    props: [ 'clickTrack' ],
+    props: [ 'clickTrack', 'songDuration', 'songStartTime' ],
     computed: {
         secondsPerClick() {
-            return 60.0 / this.clickTrack.bpm
+            return computeSecondsPerClick(this.clickTrack.bpm)
+        },
+        maxStartTime() {
+            return (this.songDuration || 300) + this.songStartTime - this.trackDuration
+        },
+        trackDuration() {
+            return this.clickTrack.count * this.secondsPerClick
         },
     },
 }
