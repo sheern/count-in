@@ -174,3 +174,11 @@ export default {
     },
 }
 </script>
+
+<!-- Scoped style applies to both the current component's node and any child components' ROOT NODE -->
+<!-- So I can style the root div of the vue-slider in the Player.vue scoped style -->
+<style scoped>
+.seek-slider {
+
+}
+</style>

@@ -102,6 +102,10 @@ export default {
 </script>
 
 <style>
+.song-details {
+    margin-bottom: 10px;
+}
+
 .num-input {
     width: 4em;
 }
@@ -111,11 +115,11 @@ export default {
     padding-right: 2em;
 }
 
-#start-time-slider {
+.start-time-slider {
     width: 20em;
 }
 
-#controls {
+.controls {
     margin-bottom: 1em;
 }
 </style>

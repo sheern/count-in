@@ -63,6 +63,9 @@ export default {
 }
 
 .event {
+    display: inline-block;
     position: relative;
+    padding: 5px 0 5px 0;
+    border-radius: 3px;
 }
 </style>
