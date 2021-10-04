@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <div v-if="!loading">
-            <Login v-if="!this.$root.$data.token" />
+            <Login v-if="!accessToken" />
             <div v-else>
                 <div v-if="isConnected">
                     <Main :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
@@ -23,7 +23,7 @@ import Main from '@/components/Main.vue'
 import axios from 'axios'
 import { tokenEndpointBody, unsetCodeVerifier } from '@/auth/utils.js'
 import { TOKEN_URL } from '@/auth/auth.json'
-import SpotifyWebApi from 'spotify-web-api-js'
+import { mapState } from 'vuex'
 
 export default {
     name: 'App',
@@ -32,21 +32,20 @@ export default {
             loading: false,
             isConnected: false,
             spotifyPlayer: null,
-            spotifyApi: null,
         }
     },
     components: {
         Login,
         Main,
     },
+    computed: mapState(['accessToken', 'spotifyApi']),
     methods: {
         prepareSpotifyPlayer() {
             const app = this
             const player = new window.Spotify.Player({
                 name: 'Count In',
                 getOAuthToken: cb => {
-                    const token = app.$root.$data.token
-                    cb(token)
+                    cb(app.accessToken)
                 },
                 volume: 0.5,
             })
@@ -80,20 +79,17 @@ export default {
                     // res.data.expires_in == 3600 == 1 hour
                     // res.data.refresh_token is an authorization code
 
-                    const token = res.data.access_token
-                    this.$root.$data.token = token
+                    const accessToken = res.data.access_token
+                    const refreshToken = res.data.refresh_token
+                    const expiresInMs = res.data.expires_in * 1000
+                    this.$store.dispatch('updateAuthentication', { accessToken, refreshToken, expiresInMs })
 
                     const script = document.createElement('script')
                     script.src = 'https://sdk.scdn.co/spotify-player.js'
-
+                    script.async = true
                     document.body.appendChild(script)
 
                     window.onSpotifyWebPlaybackSDKReady = this.prepareSpotifyPlayer
-
-                    // Instantiate Web API
-                    const spotifyApi = new SpotifyWebApi()
-                    spotifyApi.setAccessToken(token)
-                    this.spotifyApi = spotifyApi
 
                     // Redirect to / without refresh
                     this.loading = false
