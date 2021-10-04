@@ -1,10 +1,10 @@
 <template>
     <div id="app">
-        <div v-if="!loading">
+        <div v-if="!isLoading">
             <Login v-if="!accessToken" />
             <div v-else>
                 <div v-if="isConnected">
-                    <Main :spotifyPlayer="spotifyPlayer" :spotifyApi="spotifyApi" />
+                    <Main />
                 </div>
                 <h3 v-else>Connect to Count Me In from the desktop or mobile Spotify app</h3>
             </div>
@@ -23,42 +23,47 @@ import Main from '@/components/Main.vue'
 import axios from 'axios'
 import { tokenEndpointBody, unsetCodeVerifier } from '@/auth/utils.js'
 import { TOKEN_URL } from '@/auth/auth.json'
-import { mapState } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 
 export default {
     name: 'App',
     data() {
         return {
-            loading: false,
+            isLoading: false,
             isConnected: false,
-            spotifyPlayer: null,
         }
     },
     components: {
         Login,
         Main,
     },
-    computed: mapState(['accessToken', 'spotifyApi']),
+    computed: mapState(['accessToken']),
     methods: {
-        prepareSpotifyPlayer() {
-            const app = this
+        ...mapActions('song', [ 'updateSong' ]),
+        initializeSpotifyPlayer() {
             const player = new window.Spotify.Player({
                 name: 'Count In',
                 getOAuthToken: cb => {
-                    cb(app.accessToken)
+                    cb(this.accessToken)
                 },
                 volume: 0.5,
             })
 
-            this.spotifyPlayer = player
+            this.$store.commit('setSpotifyPlayer', { spotifyPlayer: player })
 
             player.addListener('ready', ({ device_id }) => {
-                console.log('Ready with Device ID', device_id)
+                console.log('Spotify Web Playback ready with Device ID', device_id)
             })
 
+            // TODO remove this listener upon destruction of component
             player.addListener('player_state_changed',
-                function connectedChecker(state) {
-                    app.isConnected = !!state
+                state => {
+                    this.isConnected = !!state
+
+                    if (state) {
+                        const track = state.track_window.current_track
+                        this.updateSong({ songUri: track.uri })
+                    }
                 })
 
             player.connect()
@@ -67,7 +72,7 @@ export default {
     created() {
         const authCode = new URLSearchParams(window.location.search).get('code')
         if (authCode) {
-            this.loading = true
+            this.isLoading = true
             // Make post request for token
             const urlEncodedBody = new URLSearchParams(tokenEndpointBody(authCode)).toString()
             axios.post(TOKEN_URL,
@@ -75,9 +80,6 @@ export default {
                 { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }})
                 .then(res => {
                     unsetCodeVerifier()
-
-                    // res.data.expires_in == 3600 == 1 hour
-                    // res.data.refresh_token is an authorization code
 
                     const accessToken = res.data.access_token
                     const refreshToken = res.data.refresh_token
@@ -89,16 +91,17 @@ export default {
                     script.async = true
                     document.body.appendChild(script)
 
-                    window.onSpotifyWebPlaybackSDKReady = this.prepareSpotifyPlayer
+                    window.onSpotifyWebPlaybackSDKReady = this.initializeSpotifyPlayer
 
                     // Redirect to / without refresh
-                    this.loading = false
+                    this.isLoading = false
                     window.history.pushState(null, '', '/')
                 })
-                .catch(() => {
+                .catch(error => {
                     // Redirect to login page
                     console.warn('Could not authenticate user, redirecting back to login page')
-                    this.loading = false
+                    console.error(error)
+                    this.isLoading = false
                     window.history.pushState(null, '', '/')
                 })
         }

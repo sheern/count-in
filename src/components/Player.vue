@@ -13,9 +13,9 @@
 </template>
 
 <script>
+import { mapState, mapGetters } from 'vuex'
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/default.css'
-import { EventType } from '@/constants.js'
 
 // Event loop frequency
 const INTERVAL = 200
@@ -27,7 +27,6 @@ export default {
     components: {
         VueSlider,
     },
-    props: ['spotifyPlayer', 'audioCtx', 'eventTimeline', 'songStartTime'],
     data() {
         return {
             playing: false,
@@ -38,7 +37,7 @@ export default {
             seekOffsetSeconds: 0,
 
             // The time we use to schedule events
-            audioCtxStartTime: 0,
+            audioContextStartTime: 0,
             nextEvent: 0,
             // setTimeout id of the song resume
             songScheduleId: 0,
@@ -47,6 +46,11 @@ export default {
             // setTimeout id of the event loop
             eventLoopId: 0,
         }
+    },
+    computed: {
+        ...mapState([ 'audioContext', 'spotifyPlayer' ]),
+        ...mapState('timeline', [ 'songStartSeconds' ]),
+        ...mapGetters('timeline', [ 'clickEventTimeline' ]),
     },
     watch: {
         previewMode(newPreviewMode) {
@@ -67,8 +71,8 @@ export default {
             this.playing = !this.playing
 
             if (this.playing) {
-                this.audioCtx.resume()
-                this.audioCtxStartTime = this.audioCtx.currentTime
+                this.audioContext.resume()
+                this.audioContextStartTime = this.audioContext.currentTime
 
                 this.triggerEventLoop()
                 if (this.previewMode) {
@@ -90,7 +94,7 @@ export default {
             this.seekTo(0)
         },
         beginPreview() {
-            this.audioCtxStartTime = this.audioCtx.currentTime
+            this.audioContextStartTime = this.audioContext.currentTime
             this.seekTo(this.sliderValue[0])
             this.seekAndScheduleSong()
 
@@ -127,7 +131,7 @@ export default {
 
         // Scheduling events
         seekAndScheduleSong() {
-            let delay = this.songStartTime - this.secondsElapsed()
+            let delay = this.songStartSeconds - this.secondsElapsed()
             let delayMs = delay * 1000
             // If we are in the middle of the song (i.e. delay is negative), we should seek to -delayMs
             // If we are before the start of the song (i.e. delay is >= 0), we should seek to 0 to reset the song
@@ -142,8 +146,8 @@ export default {
             let windowBegin = this.secondsElapsed()
             let windowEnd = windowBegin + (LOOKAHEAD / 1000.0)
 
-            for (let index = this.nextEvent; index < this.eventTimeline.length; index++) {
-                let event = this.eventTimeline[index]
+            for (let index = this.nextEvent; index < this.clickEventTimeline.length; index++) {
+                let event = this.clickEventTimeline[index]
                 if (event.time >= windowBegin && event.time < windowEnd) {
                     this.scheduleEvent(event)
                     // Don't need to schedule this event in the next loop, only process remaining
@@ -157,24 +161,22 @@ export default {
             }
         },
         scheduleEvent(event) {
-            if (event.type === EventType.CLICK) {
-                this.scheduleClick(event.time)
-            }
+            this.scheduleClick(event.time)
         },
         scheduleClick(time) {
-            let osc = this.audioCtx.createOscillator()
+            let osc = this.audioContext.createOscillator()
             osc.frequency.value = 440
-            osc.connect(this.audioCtx.destination)
+            osc.connect(this.audioContext.destination)
 
             // Floor at 0 for the very first click
             let secondsTillClick = Math.max(0, time - this.secondsElapsed())
-            let clickStart = this.audioCtx.currentTime + secondsTillClick
+            let clickStart = this.audioContext.currentTime + secondsTillClick
             osc.start(clickStart)
             osc.stop(clickStart + 0.05)
         },
 
         secondsElapsed() {
-            return this.seekOffsetSeconds + (this.audioCtx.currentTime - this.audioCtxStartTime)
+            return this.seekOffsetSeconds + (this.audioContext.currentTime - this.audioContextStartTime)
         },
     },
 }
