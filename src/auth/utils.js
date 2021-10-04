@@ -1,11 +1,11 @@
-import { CLIENT_ID, SCOPES, REDIRECT_URI, CODE_VERIFIER_KEY } from '@/auth/auth.json'
+import { CLIENT_ID, SCOPES, CODE_VERIFIER_KEY } from '@/auth/auth.json'
 
 export function authorizationQueryParameters(codeChallenge) {
     return {
         client_id: CLIENT_ID,
         scope: SCOPES,
         response_type: 'code',
-        redirect_uri: REDIRECT_URI,
+        redirect_uri: process.env.VUE_APP_REDIRECT_URI,
         code_challenge_method: 'S256',
         code_challenge: codeChallenge,
     }
@@ -17,7 +17,7 @@ export function tokenEndpointBody(authCode) {
         client_id: CLIENT_ID,
         grant_type: 'authorization_code',
         code: authCode,
-        redirect_uri: REDIRECT_URI,
+        redirect_uri: process.env.VUE_APP_REDIRECT_URI,
         code_verifier: getCodeVerifier(),
     }
 }
