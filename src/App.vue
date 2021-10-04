@@ -77,6 +77,9 @@ export default {
                 .then(res => {
                     unsetCodeVerifier()
 
+                    // res.data.expires_in == 3600 == 1 hour
+                    // res.data.refresh_token is an authorization code
+
                     const token = res.data.access_token
                     this.$root.$data.token = token
 
