@@ -15,19 +15,32 @@
 
         <Player :spotifyPlayer="spotifyPlayer" :audioCtx="audioCtx" :eventTimeline="eventTimeline" :songStartTime="songStartTime" />
 
+        <hr />
         <span>Start song at </span>
         <input class="num-input" v-model.number="songStartTime" type="number">
         <span class="units">s</span>
         <input class="start-time-slider" v-model.number="songStartTime" type="range" min="0" max="15" step="0.01">
 
         <ClickTracks :clickTracks="clickTracks" :currentSong="currentSongAnalysis" :songStartTime="songStartTime"/>
+        <hr />
 
-        <!-- <button @click="onSave">Save</button> -->
-        <!-- <select name=""> -->
-        <!--     <option v-for -->
-        <!-- <button @click="onLoad">Load</button> -->
+        <!-- Saving and loading tracks -->
+        <div style="margin-top: 20px">
+            <input v-model="sceneSaveName" placeholder="Save as...">
+            <button @click="onSaveScene">Save</button>
+            <select v-model="selectedSceneName">
+                <option v-for="(_, sceneName) in storedScenes" :value="sceneName" :key="sceneName">
+                {{ sceneName }}
+                </option>
+            </select>
+            <button @click="onLoadScene">Load</button>
+            <button @click="onDeleteScene">Delete</button>
+        </div>
+        <hr />
 
-        <div class="events">Timeline Events
+
+        <button @click="showEvents = !showEvents">{{ showEvents ? "Hide events" : "Show events" }}</button>
+        <div v-if="showEvents" class="events">
             <ul>
                 <li v-for="event in eventTimeline" :key="event.id">
                     {{ event.time.toFixed(6) }} {{ event.type }}
@@ -42,6 +55,8 @@ import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
 import Player from '@/components/Player.vue'
 import { computeEventTimeline } from '@/utils'
+import { SAVED_SCENES_KEY } from '@/constants'
+import _ from 'lodash'
 
 export default {
     name: 'Main',
@@ -54,7 +69,6 @@ export default {
     data() {
         return {
             songStartTime: 2,
-            songId: 0,
             currentSongDetails: null,
             currentSongAnalysis: null,
             // Upon pressing play, the most negative click track should be treated as 0 in the timeline
@@ -62,18 +76,34 @@ export default {
             // TODO Or setInterval like cwilso's metronome and only schedule soon-to-arrive clicks
             clickTracks: [],
             audioCtx: new AudioContext(),
+
+            songUri: null,
+            storedScenes: {},
+            sceneSaveName: '',
+            selectedSceneName: '',
+
+            showEvents: false,
         }
     },
     computed: {
         eventTimeline() {
             return computeEventTimeline(this.clickTracks, this.songStartTime)
         },
+        // Extract the Spotify song id (everything past the last :
+        songId() {
+            if (!this.songUri) {
+                return null
+            }
+
+            return this.songUri.split(':').at(-1)
+        },
     },
     watch: {
-        songId(newSongId) {
-            if (!newSongId)
+        songUri(newSongUri) {
+            if (!newSongUri)
                 return
 
+            const newSongId = this.songId
             let app = this
             // Use audio analysis endpoint instead
             this.spotifyApi.getAudioFeaturesForTrack(newSongId)
@@ -86,9 +116,47 @@ export default {
                 })
         },
     },
+    methods: {
+        onSaveScene() {
+            this.storedScenes[this.sceneSaveName] = {
+                songUri: this.songUri,
+                songStartTime: this.songStartTime,
+                clickTracks: _.cloneDeep(this.clickTracks),
+            }
+        },
+        // TODO Make sure that the Player component is stopped upon load
+        onLoadScene() {
+            const scene = this.storedScenes[this.selectedSceneName]
+            if (!scene)
+                return
+
+            this.spotifyApi.play({ uris: [scene.songUri] })
+                .then(() => {
+                    // Load scene values
+                    this.songUri = scene.songUri
+                    this.songStartTime = scene.songStartTime
+                    this.clickTracks = _.cloneDeep(scene.clickTracks)
+
+                    // Pause the playback by default
+                    this.spotifyApi.pause()
+                })
+        },
+        onDeleteScene() {
+            delete this.storedScenes[this.selectedSceneName]
+        },
+
+        saveScenesToLocalStorage() {
+            localStorage.setItem(SAVED_SCENES_KEY, JSON.stringify(this.storedScenes))
+        },
+        loadScenesFromLocalStorage() {
+            this.storedScenes = JSON.parse(localStorage.getItem(SAVED_SCENES_KEY)) || {}
+        },
+    },
     created() {
-        console.log('Adding playback state handler to listen for song changes')
+        this.loadScenesFromLocalStorage()
+
         let app = this
+        console.log('Adding playback state handler to listen for song changes')
         // TODO remove this listener upon destruction of component
         this.spotifyPlayer.addListener('player_state_changed',
             function songUpdater(state) {
@@ -99,14 +167,21 @@ export default {
                         artistName: track.artists[0].name,
                         imageUrl: track.album.images[0].url,
                     }
-                    app.songId = track.id
+                    app.songUri = track.uri
                 }
             })
+    },
+    beforeDestroy() {
+        this.saveScenesToLocalStorage()
     },
 }
 </script>
 
 <style>
+hr {
+    border: 1px solid #000;
+}
+
 .song-details {
     margin-bottom: 10px;
 }
