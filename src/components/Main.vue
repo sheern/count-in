@@ -23,20 +23,8 @@
         <ClickTracks :currentSong="songAnalysis" />
         <hr />
 
-        <!-- Saving and loading tracks -->
-        <div style="margin-top: 20px">
-            <input v-model="sceneSaveName" placeholder="Save as...">
-            <button @click="onSaveScene">Save</button>
-            <select v-model="selectedSceneName">
-                <option v-for="(_, sceneName) in storedScenes" :value="sceneName" :key="sceneName">
-                {{ sceneName }}
-                </option>
-            </select>
-            <button @click="onLoadScene">Load</button>
-            <button @click="onDeleteScene">Delete</button>
-        </div>
+        <SceneSaver />
         <hr />
-
 
         <button @click="showEvents = !showEvents">{{ showEvents ? "Hide click events" : "Show click events" }}</button>
         <div v-if="showEvents" class="events">
@@ -53,9 +41,8 @@
 import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
 import Player from '@/components/Player.vue'
-import { SAVED_SCENES_KEY } from '@/constants'
-import { mapActions, mapGetters, mapState } from 'vuex'
-import _ from 'lodash'
+import SceneSaver from '@/components/SceneSaver.vue'
+import { mapGetters, mapState } from 'vuex'
 
 export default {
     name: 'Main',
@@ -63,13 +50,10 @@ export default {
         ClickTracks,
         Timeline,
         Player,
+        SceneSaver,
     },
     data() {
         return {
-            storedScenes: {},
-            sceneSaveName: '',
-            selectedSceneName: '',
-
             showEvents: false,
         }
     },
@@ -85,47 +69,9 @@ export default {
         ...mapState([ 'spotifyApi', 'spotifyPlayer' ]),
         ...mapState('song', [ 'songUri', 'songAnalysis', 'songCatalogInfo' ]),
         ...mapGetters('song', [ 'songId' ]),
-        ...mapState('timeline', [ 'clickTracks' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline' ]),
     },
     methods: {
-        ...mapActions('song', [ 'updateSong' ]),
-        onSaveScene() {
-            const scene = {
-                songUri: this.songUri,
-                songStartSeconds: this.songStartSeconds,
-                clickTracks: _.cloneDeep(this.clickTracks),
-            }
-            this.$set(this.storedScenes, this.sceneSaveName, scene)
-        },
-        // TODO Make sure that the Player component is stopped upon load
-        onLoadScene() {
-            const scene = this.storedScenes[this.selectedSceneName]
-            if (!scene)
-                return
-
-            this.updateSong({ songUri: scene.songUri })
-            this.$store.commit('timeline/setClickTracks', { clickTracks: _.cloneDeep(scene.clickTracks) })
-            this.$store.commit('timeline/setSongStartSeconds', { seconds: scene.songStartSeconds })
-            this.spotifyApi.play({ uris: [scene.songUri] })
-                .then(() => {
-                    // Pause the playback by default
-                    this.spotifyApi.pause()
-                })
-        },
-        onDeleteScene() {
-            this.$delete(this.storedScenes, this.selectedSceneName)
-        },
-
-        saveScenesToLocalStorage() {
-            localStorage.setItem(SAVED_SCENES_KEY, JSON.stringify(this.storedScenes))
-        },
-        loadScenesFromLocalStorage() {
-            this.storedScenes = JSON.parse(localStorage.getItem(SAVED_SCENES_KEY)) || {}
-        },
-    },
-    created() {
-        this.loadScenesFromLocalStorage()
 
     },
     beforeDestroy() {
