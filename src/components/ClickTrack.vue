@@ -4,14 +4,14 @@
         <input class="num-input" v-model.number="clickTrack.bpm" type="number">
         <span class="units">BPM ({{ secondsPerClick.toFixed(3) }}s per click)</span>
 
-        <input class="num-input" v-model.number="clickTrack.count" type="number">
+        <input class="num-input" v-model.number="clickTrack.beats" type="number">
         <span class="units">beats</span>
 
         <span>Start at </span>
         <input class="num-input" v-model.number="clickTrack.startTime" type="number">
         <span class="units">s</span>
         <input class="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="0" :max="maxStartTime" step="0.01">
-        <button v-on:click="$emit('remove')">Remove</button>
+        <button v-on:click="removeClickTrack">Remove</button>
     </div>
 </template>
 
@@ -20,7 +20,7 @@ import { computeSecondsPerClick } from '@/utils'
 
 export default {
     name: 'ClickTrack',
-    props: [ 'clickTrack', 'songDuration', 'songStartTime' ],
+    props: [ 'clickTrack', 'songDuration' ],
     computed: {
         secondsPerClick() {
             return computeSecondsPerClick(this.clickTrack.bpm)
@@ -29,7 +29,12 @@ export default {
             return (this.songDuration || 300) + this.songStartTime - this.trackDuration
         },
         trackDuration() {
-            return this.clickTrack.count * this.secondsPerClick
+            return this.clickTrack.beats * this.secondsPerClick
+        },
+    },
+    methods: {
+        removeClickTrack() {
+            this.$store.commit('timeline/removeClickTrack', { clickTrackId: this.clickTrack.id })
         },
     },
 }

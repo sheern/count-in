@@ -29,7 +29,7 @@ export default {
     },
     methods: {
         clickStyle(clickTrack) {
-            const duration = clickTrack.count * computeSecondsPerClick(clickTrack.bpm)
+            const duration = clickTrack.beats * computeSecondsPerClick(clickTrack.bpm)
             return {
                 left: this.percentageInTimeline(clickTrack.startTime) + '%',
                 width: this.percentageInTimeline(duration) + '%',
