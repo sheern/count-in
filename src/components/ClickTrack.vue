@@ -4,7 +4,7 @@
         <input class="num-input" v-model.number="clickTrack.bpm" type="number">
         <span class="units">BPM ({{ secondsPerClick.toFixed(3) }}s per click)</span>
 
-        <input class="num-input" v-model.number="clickTrack.count" type="number">
+        <input class="num-input" v-model.number="clickTrack.beats" type="number">
         <span class="units">beats</span>
 
         <span>Start at </span>
@@ -29,7 +29,7 @@ export default {
             return (this.songDuration || 300) + this.songStartTime - this.trackDuration
         },
         trackDuration() {
-            return this.clickTrack.count * this.secondsPerClick
+            return this.clickTrack.beats * this.secondsPerClick
         },
     },
     methods: {
