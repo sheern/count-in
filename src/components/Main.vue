@@ -54,7 +54,7 @@ import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
 import Player from '@/components/Player.vue'
 import { SAVED_SCENES_KEY } from '@/constants'
-import { mapGetters, mapState } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 import _ from 'lodash'
 
 export default {
@@ -85,15 +85,18 @@ export default {
         ...mapState([ 'spotifyApi', 'spotifyPlayer' ]),
         ...mapState('song', [ 'songUri', 'songAnalysis', 'songCatalogInfo' ]),
         ...mapGetters('song', [ 'songId' ]),
+        ...mapState('timeline', [ 'clickTracks' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline' ]),
     },
     methods: {
+        ...mapActions('song', [ 'updateSong' ]),
         onSaveScene() {
-            this.storedScenes[this.sceneSaveName] = {
+            const scene = {
                 songUri: this.songUri,
                 songStartSeconds: this.songStartSeconds,
                 clickTracks: _.cloneDeep(this.clickTracks),
             }
+            this.$set(this.storedScenes, this.sceneSaveName, scene)
         },
         // TODO Make sure that the Player component is stopped upon load
         onLoadScene() {
@@ -111,7 +114,7 @@ export default {
                 })
         },
         onDeleteScene() {
-            delete this.storedScenes[this.selectedSceneName]
+            this.$delete(this.storedScenes, this.selectedSceneName)
         },
 
         saveScenesToLocalStorage() {
