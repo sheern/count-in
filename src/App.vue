@@ -6,7 +6,11 @@
                 <div v-if="isConnected">
                     <Main />
                 </div>
-                <h3 v-else>Connect to Count Me In from the desktop or mobile Spotify app</h3>
+                <div v-else>
+                    <h3>Connect to Count Me In</h3>
+                    <!-- Button to transfer user playback to this device id -->
+                    <button @click="transferPlayback">Transfer playback</button>
+                </div>
             </div>
         </div>
 
@@ -31,13 +35,14 @@ export default {
         return {
             isLoading: false,
             isConnected: false,
+            deviceId: '',
         }
     },
     components: {
         Login,
         Main,
     },
-    computed: mapState(['accessToken']),
+    computed: mapState([ 'accessToken', 'spotifyApi' ]),
     methods: {
         ...mapActions('song', [ 'updateSong' ]),
         initializeSpotifyPlayer() {
@@ -53,6 +58,7 @@ export default {
 
             player.addListener('ready', ({ device_id }) => {
                 console.log('Spotify Web Playback ready with Device ID', device_id)
+                this.deviceId = device_id
             })
 
             // TODO remove this listener upon destruction of component
@@ -67,6 +73,13 @@ export default {
                 })
 
             player.connect()
+        },
+        transferPlayback() {
+            if (this.deviceId.length) {
+                this.spotifyApi.transferMyPlayback([this.deviceId])
+            } else {
+                console.warn('Spotify Web Playback device not ready yet')
+            }
         },
     },
     created() {
@@ -94,8 +107,10 @@ export default {
                     window.onSpotifyWebPlaybackSDKReady = this.initializeSpotifyPlayer
 
                     // Redirect to / without refresh
-                    this.isLoading = false
                     window.history.pushState(null, '', '/')
+                    // Perhaps loading should be false once the Spotify Web Playback SDK is loaded in
+                    // Currently, we don't wait for the on...SDKReady handler to be called, only register it
+                    this.isLoading = false
                 })
                 .catch(error => {
                     // Redirect to login page
