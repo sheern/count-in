@@ -149,7 +149,7 @@ export default {
             for (let index = this.nextEvent; index < this.clickEventTimeline.length; index++) {
                 let event = this.clickEventTimeline[index]
                 if (event.time >= windowBegin && event.time < windowEnd) {
-                    this.scheduleEvent(event)
+                    this.scheduleClick(event.time)
                     // Don't need to schedule this event in the next loop, only process remaining
                     this.nextEvent = index + 1
                 }
@@ -160,19 +160,16 @@ export default {
                 }
             }
         },
-        scheduleEvent(event) {
-            this.scheduleClick(event.time)
-        },
         scheduleClick(time) {
             let osc = this.audioContext.createOscillator()
-            osc.frequency.value = 440
+            osc.frequency.value = 220
             osc.connect(this.audioContext.destination)
 
             // Floor at 0 for the very first click
             let secondsTillClick = Math.max(0, time - this.secondsElapsed())
             let clickStart = this.audioContext.currentTime + secondsTillClick
             osc.start(clickStart)
-            osc.stop(clickStart + 0.05)
+            osc.stop(clickStart + 0.025)
         },
 
         secondsElapsed() {
