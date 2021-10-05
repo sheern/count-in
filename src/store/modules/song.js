@@ -11,21 +11,31 @@ const getters = {
     songId(state) {
         return state.songUri.split(':').at(-1)
     },
+    isSongCatalogInfoLoaded(state) {
+        return !!state.songCatalogInfo &&
+            state.songUri === state.songCatalogInfo.songUri
+    },
+    isSongAnalysisLoaded(state) {
+        return !!state.songAnalysis &&
+            state.songUri === state.songAnalysis.songUri
+    },
 }
 
 const mutations = {
     setSongUri(state, { songUri }) {
         state.songUri = songUri
     },
-    setSongCatalogInfo(state, { name, imageUrl, artist }) {
+    setSongCatalogInfo(state, { songUri, name, imageUrl, artist }) {
         state.songCatalogInfo = {
+            songUri,
             name,
             imageUrl,
             artist,
         }
     },
-    setSongAnalysis(state, { tempo, timeSignature, duration }) {
+    setSongAnalysis(state, { songUri, tempo, timeSignature, duration }) {
         state.songAnalysis = {
+            songUri,
             tempo,
             timeSignature,
             duration,
@@ -45,11 +55,13 @@ const actions = {
         const { name, album, artists } = await rootState.spotifyApi.getTrack(songId)
 
         commit('setSongCatalogInfo', {
+            songUri,
             name,
             imageUrl: album.images[0].url,
             artist: artists[0].name,
         })
         commit('setSongAnalysis', {
+            songUri,
             tempo,
             timeSignature: time_signature,
             duration: duration_ms / 1000.0,

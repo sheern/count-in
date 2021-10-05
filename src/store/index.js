@@ -15,6 +15,11 @@ export default new Vuex.Store({
         spotifyApi: new SpotifyWebApi(),
         // The class window.Spotify is polyfilled in the Web Playback SDK script
         // We can only initialize once it is ready (once window.onSpotifyWebPlaybackSDKReady is called)
+        // TODO This has strange behavior as part of Vuex's state
+        //      When time-traveling in devtools, the player no longer functions
+        //      (perhaps relying on some constantly updating internal state
+        //      which is irreversibly changed by the time-travel).
+        //      It may be preferred to store this stateful object in vm.$data
         spotifyPlayer: null,
         audioContext: new AudioContext(),
     },

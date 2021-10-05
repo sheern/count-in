@@ -1,11 +1,11 @@
 <template>
     <div class="main">
-        <div class="song-details" v-if="songCatalogInfo">
+        <div v-if="isSongCatalogInfoLoaded" class="song-details" >
             <img width="200" height="200" alt="Song image" :src="songCatalogInfo.imageUrl">
             <h2>{{ songCatalogInfo.name }}</h2>
             <h3 style="color: #999">{{ songCatalogInfo.artist }}</h3>
         </div>
-        <div v-if="songAnalysis">
+        <div v-if="isSongAnalysisLoaded">
             <Timeline :songDuration="songAnalysis.duration" />
             <h4>
                 Spotify says the tempo is {{ songAnalysis.tempo }} in time signature {{ songAnalysis.timeSignature }}/4
@@ -68,7 +68,7 @@ export default {
         },
         ...mapState([ 'spotifyApi', 'spotifyPlayer' ]),
         ...mapState('song', [ 'songUri', 'songAnalysis', 'songCatalogInfo' ]),
-        ...mapGetters('song', [ 'songId' ]),
+        ...mapGetters('song', [ 'songId', 'isSongCatalogInfoLoaded', 'isSongAnalysisLoaded' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline' ]),
     },
     methods: {
