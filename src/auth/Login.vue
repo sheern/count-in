@@ -1,9 +1,14 @@
 <template>
     <div>
         <v-img class="mx-auto" width="150" aspect-ratio="1" alt="Spotify logo"
-                                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png" />
-        <div />
-        <v-btn @click="onLogin()">Log in</v-btn>
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png" />
+
+        <v-container class="mt-2">
+            <v-btn @click="onLogin()"
+                rounded>
+                Sign in
+            </v-btn>
+        </v-container>
     </div>
 </template>
 

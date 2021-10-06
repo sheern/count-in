@@ -11,7 +11,12 @@
         <input class="num-input" v-model.number="clickTrack.startTime" type="number">
         <span class="units">s</span>
         <input class="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="0" :max="maxStartTime" step="0.01">
-        <v-btn v-on:click="removeClickTrack">Remove</v-btn>
+        <v-btn @click="removeClickTrack"
+            fab x-small>
+            <v-icon color="red">
+                mdi-trash-can-outline
+            </v-icon>
+        </v-btn>
     </div>
 </template>
 

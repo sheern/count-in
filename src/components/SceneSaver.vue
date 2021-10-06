@@ -2,14 +2,23 @@
     <!-- Saving and loading tracks -->
     <div>
         <input v-model="sceneSaveName" placeholder="Save as...">
-        <v-btn @click="onSaveScene">Save</v-btn>
+        <v-btn @click="onSaveScene"
+            rounded>
+            Save
+        </v-btn>
         <select v-model="selectedSceneName">
             <option v-for="(_, sceneName) in storedScenes" :value="sceneName" :key="sceneName">
             {{ sceneName }}
             </option>
         </select>
-        <v-btn @click="onLoadScene">Load</v-btn>
-        <v-btn @click="onDeleteScene">Delete</v-btn>
+        <v-btn @click="onLoadScene"
+            class="mx-1" rounded>
+            Load
+        </v-btn>
+        <v-btn @click="onDeleteScene"
+            class="mx-1" rounded>
+            Delete
+        </v-btn>
     </div>
 </template>
 

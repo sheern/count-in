@@ -2,7 +2,14 @@
     <div>
         <ClickTrack v-for="cl in clickTracks" :clickTrack="cl"
         :songDuration="300" :key="cl.id" />
-        <v-btn v-on:click="addClickTrack">Add click track</v-btn>
+        <v-btn @click="addClickTrack"
+            fab absolute top right
+            class="mt-11"
+            color="primary">
+            <v-icon>
+                mdi-metronome
+            </v-icon>
+        </v-btn>
     </div>
 </template>
 

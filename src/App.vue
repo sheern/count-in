@@ -11,7 +11,11 @@
                         <div v-else>
                             <h3>Connect to Count Me In</h3>
                             <!-- Button to transfer user playback to this device id -->
-                            <v-btn @click="transferPlayback" :disabled="deviceId.length === 0">Transfer playback</v-btn>
+                            <v-btn @click="transferPlayback" :disabled="deviceId.length === 0"
+                                rounded>
+                                Transfer Spotify control
+                                <v-icon right color="green">mdi-spotify</v-icon>
+                            </v-btn>
                         </div>
                     </div>
                 </div>
