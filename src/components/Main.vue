@@ -12,19 +12,21 @@
             </h4>
         </div>
 
-        <Player />
+        <v-card class="my-4 py-4">
+            <Player />
+        </v-card>
 
-        <hr />
-        <span>Start song at </span>
-        <input class="num-input" v-model.number="songStartSeconds" type="number">
-        <span class="units">s</span>
-        <input class="start-time-slider" v-model.number="songStartSeconds" type="range" min="0" max="15" step="0.01">
+        <v-card class="my-4 py-4">
+            <span>Start song at </span>
+            <input class="num-input" v-model.number="songStartSeconds" type="number">
+            <span class="units">s</span>
+            <input class="start-time-slider" v-model.number="songStartSeconds" type="range" min="0" max="15" step="0.01">
+            <ClickTracks :currentSong="songAnalysis" />
+        </v-card>
 
-        <ClickTracks :currentSong="songAnalysis" />
-        <hr />
-
-        <SceneSaver />
-        <hr />
+        <v-card class="my-4 py-4">
+            <SceneSaver />
+        </v-card>
 
         <v-btn @click="showEvents = !showEvents">{{ showEvents ? "Hide click events" : "Show click events" }}</v-btn>
         <div v-if="showEvents" class="events">
@@ -81,10 +83,6 @@ export default {
 </script>
 
 <style>
-hr {
-    border: 1px solid #000;
-}
-
 .song-details {
     margin-bottom: 10px;
 }

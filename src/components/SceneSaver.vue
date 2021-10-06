@@ -1,6 +1,6 @@
 <template>
     <!-- Saving and loading tracks -->
-    <div style="margin-top: 20px">
+    <div>
         <input v-model="sceneSaveName" placeholder="Save as...">
         <v-btn @click="onSaveScene">Save</v-btn>
         <select v-model="selectedSceneName">
