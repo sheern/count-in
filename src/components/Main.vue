@@ -1,7 +1,7 @@
 <template>
     <div class="main">
         <div v-if="isSongCatalogInfoLoaded" class="song-details" >
-            <img width="200" height="200" alt="Song image" :src="songCatalogInfo.imageUrl">
+            <v-img class="mx-auto" width="200" aspect-ratio="1" alt="Song image" :src="songCatalogInfo.imageUrl" />
             <h2>{{ songCatalogInfo.name }}</h2>
             <h3 style="color: #999">{{ songCatalogInfo.artist }}</h3>
         </div>

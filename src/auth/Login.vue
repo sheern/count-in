@@ -1,6 +1,7 @@
 <template>
     <div>
-        <img width="150" height="150" alt="Vue logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png">
+        <v-img class="mx-auto" width="150" aspect-ratio="1" alt="Spotify logo"
+                                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png" />
         <div />
         <v-btn @click="onLogin()">Log in</v-btn>
     </div>
