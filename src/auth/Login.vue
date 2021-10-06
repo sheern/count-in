@@ -2,7 +2,7 @@
     <div>
         <img width="150" height="150" alt="Vue logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1024px-Spotify_logo_without_text.svg.png">
         <div />
-        <button @click="onLogin()">Log in</button>
+        <v-btn @click="onLogin()">Log in</v-btn>
     </div>
 </template>
 

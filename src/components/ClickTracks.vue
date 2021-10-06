@@ -2,7 +2,7 @@
     <div>
         <ClickTrack v-for="cl in clickTracks" :clickTrack="cl"
         :songDuration="300" :key="cl.id" />
-        <button v-on:click="addClickTrack">Add click track</button>
+        <v-btn v-on:click="addClickTrack">Add click track</v-btn>
     </div>
 </template>
 

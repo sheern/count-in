@@ -26,7 +26,7 @@
         <SceneSaver />
         <hr />
 
-        <button @click="showEvents = !showEvents">{{ showEvents ? "Hide click events" : "Show click events" }}</button>
+        <v-btn @click="showEvents = !showEvents">{{ showEvents ? "Hide click events" : "Show click events" }}</v-btn>
         <div v-if="showEvents" class="events">
             <ul>
                 <li v-for="event in clickEventTimeline" :key="event.id">

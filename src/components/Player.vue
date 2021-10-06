@@ -1,8 +1,8 @@
 <template>
     <div class="controls">
-        <button v-on:click="onPlay">{{ playing ? 'Stop' : 'Play' }}</button>
-        <button v-on:click="onReset">Reset</button>
-        <button @click="previewMode = !previewMode">{{ previewMode ? "Exit preview mode" : "Preview mode" }}</button>
+        <v-btn v-on:click="onPlay">{{ playing ? 'Stop' : 'Play' }}</v-btn>
+        <v-btn v-on:click="onReset">Reset</v-btn>
+        <v-btn @click="previewMode = !previewMode">{{ previewMode ? "Exit preview mode" : "Preview mode" }}</v-btn>
         <h5>Seek slider</h5>
         <!-- v-model doesn't seem to bind properly when set in a watch function (re-render happens before watch?) -->
         <!-- ACTUALLY when not touching start value, the component doesn't rerender even when leaving preview mode. WTF! -->
