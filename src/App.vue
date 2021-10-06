@@ -1,24 +1,28 @@
 <template>
-    <div id="app">
-        <div v-if="!isLoading">
-            <Login v-if="!accessToken" />
-            <div v-else>
-                <div v-if="isConnected">
-                    <Main />
+    <v-app>
+        <v-main>
+            <v-container class="pa-4">
+                <div v-if="!isLoading">
+                    <Login v-if="!accessToken" />
+                    <div v-else>
+                        <div v-if="isConnected">
+                            <Main />
+                        </div>
+                        <div v-else>
+                            <h3>Connect to Count Me In</h3>
+                            <!-- Button to transfer user playback to this device id -->
+                            <v-btn @click="transferPlayback" :disabled="deviceId.length === 0">Transfer playback</v-btn>
+                        </div>
+                    </div>
                 </div>
-                <div v-else>
-                    <h3>Connect to Count Me In</h3>
-                    <!-- Button to transfer user playback to this device id -->
-                    <button @click="transferPlayback">Transfer playback</button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Waiting for Spotify token -->
-        <div v-else>
-            Waiting for Spotify access token
-        </div>
-    </div>
+                <!-- Waiting for Spotify token -->
+                <div v-else>
+                    Waiting for Spotify access token
+                </div>
+            </v-container>
+        </v-main>
+    </v-app>
 </template>
 
 <script>
@@ -75,11 +79,7 @@ export default {
             player.connect()
         },
         transferPlayback() {
-            if (this.deviceId.length) {
-                this.spotifyApi.transferMyPlayback([this.deviceId])
-            } else {
-                console.warn('Spotify Web Playback device not ready yet')
-            }
+            this.spotifyApi.transferMyPlayback([this.deviceId])
         },
     },
     created() {
@@ -126,14 +126,7 @@ export default {
 
 <style>
 #app {
-    width: 100%;
-    height: 100%;
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     text-align: center;
-    color: #ddd;
-    margin-top: 60px;
 }
 
 .events {
