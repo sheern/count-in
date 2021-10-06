@@ -25,13 +25,13 @@ import { computeSecondsPerClick } from '@/utils'
 
 export default {
     name: 'ClickTrack',
-    props: [ 'clickTrack', 'songDuration' ],
+    props: [ 'clickTrack', 'timelineDuration' ],
     computed: {
         secondsPerClick() {
             return computeSecondsPerClick(this.clickTrack.bpm)
         },
         maxStartTime() {
-            return (this.songDuration || 300) + this.songStartTime - this.trackDuration
+            return this.timelineDuration - this.trackDuration
         },
         trackDuration() {
             return this.clickTrack.beats * this.secondsPerClick

@@ -1,7 +1,8 @@
 <template>
     <div>
-        <ClickTrack v-for="cl in clickTracks" :clickTrack="cl"
-        :songDuration="300" :key="cl.id" />
+        <ClickTrack v-for="cl in clickTracks" :key="cl.id"
+                    :clickTrack="cl" :timelineDuration="timelineDuration" />
+
         <v-btn @click="addClickTrack"
             fab absolute top right
             class="mt-11"
@@ -23,12 +24,21 @@ export default {
     components: {
         ClickTrack,
     },
-    props: [ 'currentSong' ],
-    computed: mapState('timeline', [ 'clickTracks' ]),
+    computed: {
+        ...mapState('timeline', [ 'clickTracks', 'songStartSeconds' ]),
+        timelineDuration() {
+            const { duration = 300 } = this.nullSafeSongAnalysis
+            return duration + this.songStartSeconds
+        },
+        nullSafeSongAnalysis() {
+            return this.$store.state.song.songAnalysis || {}
+        },
+    },
     methods: {
         addClickTrack() {
-            const { tempo = 120, timeSignature = 4 } = this.currentSong || {}
-            this.$store.commit('timeline/addClickTrack', { clickTrack: createClickTrack(0, tempo, timeSignature) })
+            const { tempo = 120, timeSignature = 4 } = this.nullSafeSongAnalysis
+            const clickTrack = createClickTrack(0, tempo, timeSignature)
+            this.$store.commit('timeline/addClickTrack', { clickTrack })
         },
     },
 }

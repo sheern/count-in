@@ -17,11 +17,7 @@
         </v-card>
 
         <v-card class="my-4 py-4">
-            <span>Start song at </span>
-            <input class="num-input" v-model.number="songStartSeconds" type="number">
-            <span class="units">s</span>
-            <input class="start-time-slider" v-model.number="songStartSeconds" type="range" min="0" max="15" step="0.01">
-            <ClickTracks :currentSong="songAnalysis" />
+            <TimelineEditor />
         </v-card>
 
         <v-card class="my-4 py-4">
@@ -40,8 +36,8 @@
 </template>
 
 <script>
-import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
+import TimelineEditor from '@/components/TimelineEditor.vue'
 import Player from '@/components/Player.vue'
 import SceneSaver from '@/components/SceneSaver.vue'
 import { mapGetters, mapState } from 'vuex'
@@ -49,8 +45,8 @@ import { mapGetters, mapState } from 'vuex'
 export default {
     name: 'Main',
     components: {
-        ClickTracks,
         Timeline,
+        TimelineEditor,
         Player,
         SceneSaver,
     },
@@ -60,24 +56,10 @@ export default {
         }
     },
     computed: {
-        songStartSeconds: {
-            get() {
-                return this.$store.state.timeline.songStartSeconds
-            },
-            set(seconds) {
-                this.$store.commit('timeline/setSongStartSeconds', { seconds })
-            },
-        },
         ...mapState([ 'spotifyApi', 'spotifyPlayer' ]),
         ...mapState('song', [ 'songUri', 'songAnalysis', 'songCatalogInfo' ]),
         ...mapGetters('song', [ 'songId', 'isSongCatalogInfoLoaded', 'isSongAnalysisLoaded' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline' ]),
-    },
-    methods: {
-
-    },
-    beforeDestroy() {
-        this.saveScenesToLocalStorage()
     },
 }
 </script>
