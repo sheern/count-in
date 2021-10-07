@@ -7,9 +7,6 @@
         </div>
         <div v-if="isSongAnalysisLoaded">
             <Timeline :songDuration="songAnalysis.duration" />
-            <h4>
-                Spotify says the tempo is {{ songAnalysis.tempo }} in time signature {{ songAnalysis.timeSignature }}/4
-            </h4>
         </div>
 
         <v-card class="my-4 py-4">
