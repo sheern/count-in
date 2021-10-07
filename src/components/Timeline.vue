@@ -14,17 +14,22 @@
 
 <script>
 import { computeSecondsPerClick } from '@/utils'
+import { mapState } from 'vuex'
 
 export default {
     name: 'Timeline',
-    props: ['songStartTime', 'songDuration', 'clickTracks'],
+    props: [ 'songDuration' ],
     computed: {
+        ...mapState('timeline', [ 'songStartSeconds', 'clickTracks' ]),
         songStyle() {
             return {
-                left: this.percentageInTimeline(this.songStartTime) + '%',
+                left: this.percentageInTimeline(this.songStartSeconds) + '%',
                 width: this.percentageInTimeline(this.songDuration) + '%',
                 'background-color': '#a34',
             }
+        },
+        totalDuration() {
+            return this.songDuration + this.songStartSeconds
         },
     },
     methods: {
@@ -37,10 +42,7 @@ export default {
             }
         },
         percentageInTimeline(time) {
-            return (time / this.totalDuration()) * 100
-        },
-        totalDuration() {
-            return this.songDuration + this.songStartTime
+            return (time / this.totalDuration) * 100
         },
     },
 }
@@ -66,6 +68,5 @@ export default {
     display: inline-block;
     position: relative;
     padding: 5px 0 5px 0;
-    border-radius: 3px;
 }
 </style>
