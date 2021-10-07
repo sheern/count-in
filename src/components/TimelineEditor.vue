@@ -1,12 +1,21 @@
 <template>
-    <div>
-        <span>Start song after</span>
-        <input class="num-input" v-model.number="songStartSeconds" type="number">
-        <span class="units">s</span>
-        <input class="start-time-slider" v-model.number="songStartSeconds" type="range" min="0" max="15" step="0.01">
+    <v-container class="pa-0">
+        <v-slider v-model="songStartSeconds" type="number" min="0" max="15" step="0.01"
+            persistent-hint :hint="`Start song after ${songStartSeconds} seconds`">
+            <template v-slot:append>
+                <v-btn @click="bumpSongStart(-0.1)" icon>
+                    <v-icon color="red">mdi-minus</v-icon>
+                </v-btn>
+                <v-btn @click="bumpSongStart(0.1)" icon>
+                    <v-icon color="green">mdi-plus</v-icon>
+                </v-btn>
+            </template>
+        </v-slider>
+
+        <div class="mt-4"></div>
 
         <ClickTracks />
-    </div>
+    </v-container>
 </template>
 
 <script>
@@ -27,9 +36,10 @@ export default {
             },
         },
     },
+    methods: {
+        bumpSongStart(amount) {
+            this.songStartSeconds += amount
+        },
+    },
 }
 </script>
-
-<style>
-
-</style>

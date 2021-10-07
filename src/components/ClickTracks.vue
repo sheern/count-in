@@ -1,11 +1,12 @@
 <template>
     <div>
-        <ClickTrack v-for="cl in clickTracks" :key="cl.id"
-                    :clickTrack="cl" :timelineDuration="timelineDuration" />
+        <div v-for="cl in clickTracks" :key="cl.id">
+            <v-divider class="my-4"></v-divider>
+            <ClickTrack :clickTrack="cl" :timelineDuration="timelineDuration" />
+        </div>
 
         <v-btn @click="addClickTrack"
-            fab absolute top right
-            class="mt-11"
+            fab absolute bottom right
             color="primary">
             <v-icon>
                 mdi-metronome

@@ -16,7 +16,7 @@
             <Player />
         </v-card>
 
-        <v-card class="my-4 py-4">
+        <v-card class="my-4 pa-4">
             <TimelineEditor />
         </v-card>
 
