@@ -14,7 +14,7 @@
 
 <script>
 import pkceChallenge from 'pkce-challenge'
-import { AUTHORIZATION_URL } from '@/auth/auth.json'
+import { AUTHORIZATION_URL } from '@/auth/constants'
 import { authorizationQueryParameters, setCodeVerifier } from '@/auth/utils'
 
 export default {

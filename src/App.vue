@@ -34,7 +34,7 @@ import Login from '@/auth/Login.vue'
 import Main from '@/components/Main.vue'
 import axios from 'axios'
 import { tokenEndpointBody, unsetCodeVerifier } from '@/auth/utils.js'
-import { TOKEN_URL } from '@/auth/auth.json'
+import { TOKEN_URL } from '@/auth/constants'
 import { mapActions, mapState } from 'vuex'
 
 export default {
