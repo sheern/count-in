@@ -1,15 +1,29 @@
 <template>
     <!-- Saving and loading tracks -->
-    <div style="margin-top: 20px">
-        <input v-model="sceneSaveName" placeholder="Save as...">
-        <button @click="onSaveScene">Save</button>
-        <select v-model="selectedSceneName">
-            <option v-for="(_, sceneName) in storedScenes" :value="sceneName" :key="sceneName">
-            {{ sceneName }}
-            </option>
-        </select>
-        <button @click="onLoadScene">Load</button>
-        <button @click="onDeleteScene">Delete</button>
+    <div>
+        <v-row
+            no-gutters class="px-3" align="center">
+            <v-text-field v-model="sceneSaveName" placeholder="Save as..."
+                                                  outlined hide-details>
+            </v-text-field>
+            <v-btn @click="onSaveScene"
+                rounded>
+                Save
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-select v-model="selectedSceneName"
+                      :items="Object.keys(storedScenes)"
+                      outlined hide-details>
+            </v-select>
+            <v-btn @click="onLoadScene"
+                rounded>
+                Load
+            </v-btn>
+            <v-btn @click="onDeleteScene"
+                rounded>
+                Delete
+            </v-btn>
+        </v-row>
     </div>
 </template>
 
@@ -22,7 +36,7 @@ export default {
     name: 'SceneSaver',
     data() {
         return {
-            storedScenes: [],
+            storedScenes: {},
             sceneSaveName: '',
             selectedSceneName: '',
         }
@@ -73,7 +87,3 @@ export default {
     },
 }
 </script>
-
-<style>
-
-</style>

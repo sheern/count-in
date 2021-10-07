@@ -9,6 +9,10 @@ const getters = {
     clickEventTimeline(state) {
         return computeClickEventTimeline(state.clickTracks)
     },
+    timelineDuration(state, _, rootState) {
+        const analysis = rootState.song.songAnalysis
+        return state.songStartSeconds + (analysis ? analysis.duration : 300)
+    },
 }
 
 const mutations = {

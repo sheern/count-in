@@ -1,7 +1,7 @@
 <template>
     <div class="main">
         <div v-if="isSongCatalogInfoLoaded" class="song-details" >
-            <img width="200" height="200" alt="Song image" :src="songCatalogInfo.imageUrl">
+            <v-img class="mx-auto" width="200" aspect-ratio="1" alt="Song image" :src="songCatalogInfo.imageUrl" />
             <h2>{{ songCatalogInfo.name }}</h2>
             <h3 style="color: #999">{{ songCatalogInfo.artist }}</h3>
         </div>
@@ -12,21 +12,19 @@
             </h4>
         </div>
 
-        <Player />
+        <v-card class="my-4 py-4">
+            <Player />
+        </v-card>
 
-        <hr />
-        <span>Start song at </span>
-        <input class="num-input" v-model.number="songStartSeconds" type="number">
-        <span class="units">s</span>
-        <input class="start-time-slider" v-model.number="songStartSeconds" type="range" min="0" max="15" step="0.01">
+        <v-card class="my-4 pa-4">
+            <TimelineEditor />
+        </v-card>
 
-        <ClickTracks :currentSong="songAnalysis" />
-        <hr />
+        <v-card class="my-4 py-4">
+            <SceneSaver />
+        </v-card>
 
-        <SceneSaver />
-        <hr />
-
-        <button @click="showEvents = !showEvents">{{ showEvents ? "Hide click events" : "Show click events" }}</button>
+        <v-btn @click="showEvents = !showEvents">{{ showEvents ? "Hide click events" : "Show click events" }}</v-btn>
         <div v-if="showEvents" class="events">
             <ul>
                 <li v-for="event in clickEventTimeline" :key="event.id">
@@ -38,8 +36,8 @@
 </template>
 
 <script>
-import ClickTracks from '@/components/ClickTracks.vue'
 import Timeline from '@/components/Timeline.vue'
+import TimelineEditor from '@/components/TimelineEditor.vue'
 import Player from '@/components/Player.vue'
 import SceneSaver from '@/components/SceneSaver.vue'
 import { mapGetters, mapState } from 'vuex'
@@ -47,8 +45,8 @@ import { mapGetters, mapState } from 'vuex'
 export default {
     name: 'Main',
     components: {
-        ClickTracks,
         Timeline,
+        TimelineEditor,
         Player,
         SceneSaver,
     },
@@ -58,33 +56,15 @@ export default {
         }
     },
     computed: {
-        songStartSeconds: {
-            get() {
-                return this.$store.state.timeline.songStartSeconds
-            },
-            set(seconds) {
-                this.$store.commit('timeline/setSongStartSeconds', { seconds })
-            },
-        },
         ...mapState([ 'spotifyApi', 'spotifyPlayer' ]),
         ...mapState('song', [ 'songUri', 'songAnalysis', 'songCatalogInfo' ]),
         ...mapGetters('song', [ 'songId', 'isSongCatalogInfoLoaded', 'isSongAnalysisLoaded' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline' ]),
     },
-    methods: {
-
-    },
-    beforeDestroy() {
-        this.saveScenesToLocalStorage()
-    },
 }
 </script>
 
 <style>
-hr {
-    border: 1px solid #000;
-}
-
 .song-details {
     margin-bottom: 10px;
 }

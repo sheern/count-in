@@ -1,21 +1,38 @@
 <template>
-    <div class="controls">
-        <button v-on:click="onPlay">{{ playing ? 'Stop' : 'Play' }}</button>
-        <button v-on:click="onReset">Reset</button>
-        <button @click="previewMode = !previewMode">{{ previewMode ? "Exit preview mode" : "Preview mode" }}</button>
-        <h5>Seek slider</h5>
-        <!-- v-model doesn't seem to bind properly when set in a watch function (re-render happens before watch?) -->
-        <!-- ACTUALLY when not touching start value, the component doesn't rerender even when leaving preview mode. WTF! -->
-        <!-- Maybe have 2 separate sliders? 1 for seek time, other for preview range -->
-        <vue-slider class="seek-slider" v-model="sliderValue" :interval="0.05" :max="300"
-            :min-range="5" :max-range="50" :enable-cross="false" />
+    <div>
+        <v-row no-gutters align="center">
+            <v-spacer />
+            <v-btn @click="onPlay"
+                class="mx-1" fab small>
+                <v-icon>
+                    {{ playing ? 'mdi-pause' : 'mdi-play' }}
+                </v-icon>
+            </v-btn>
+            <v-btn @click="previewMode = !previewMode"
+                rounded class="mx-1" :color="previewMode ? 'primary' : ''">
+                Preview mode
+            </v-btn>
+            <v-spacer />
+        </v-row>
+
+        <v-row no-gutters class="px-4 pt-6">
+            <v-slider v-model.number="sliderValue" :step="0.1" :max="timelineDuration"
+                      label="Seek to" :hint="`${sliderValue} seconds`" persistent-hint>
+                <template v-slot:append>
+                    <v-fade-transition>
+                        <v-text-field v-if="previewMode" v-model="previewDuration" type="number" min="5"
+                            persistent-hint hint="Seconds" label="Preview duration"
+                            class="mt-0 pt-0" style="width: 100px">
+                        </v-text-field>
+                    </v-fade-transition>
+                </template>
+            </v-slider>
+        </v-row>
     </div>
 </template>
 
 <script>
 import { mapState, mapGetters } from 'vuex'
-import VueSlider from 'vue-slider-component'
-import 'vue-slider-component/theme/default.css'
 
 // Event loop frequency
 const INTERVAL = 200
@@ -24,13 +41,11 @@ const LOOKAHEAD = INTERVAL * 1.25
 
 export default {
     name: 'Player',
-    components: {
-        VueSlider,
-    },
     data() {
         return {
             playing: false,
             previewMode: false,
+            previewDuration: 5,
             sliderValue: 0,
             // The offset applied to elapsed time
             // This is non-zero when pausing the track or seeking to a point in the track
@@ -50,20 +65,7 @@ export default {
     computed: {
         ...mapState([ 'audioContext', 'spotifyPlayer' ]),
         ...mapState('timeline', [ 'songStartSeconds' ]),
-        ...mapGetters('timeline', [ 'clickEventTimeline' ]),
-    },
-    watch: {
-        previewMode(newPreviewMode) {
-            // WTF without adjusting the start value of the slider, it doesn't react to the change from range to single
-            // TODO file an issue
-            let sliderValue = this.sliderValue
-            if (newPreviewMode) {
-                this.sliderValue = [sliderValue + 0.1, sliderValue + 10]
-            }
-            else {
-                this.sliderValue = sliderValue[0] - 0.1
-            }
-        },
+        ...mapGetters('timeline', [ 'clickEventTimeline', 'timelineDuration' ]),
     },
     // TODO add a handler for seek slider release, update seekOffsetSeconds
     methods: {
@@ -85,22 +87,19 @@ export default {
             else {
                 // Maintain track position so user can resume
                 this.seekOffsetSeconds = this.secondsElapsed()
+                this.sliderValue = this.seekOffsetSeconds
                 this.stopSong()
 
                 clearTimeout(this.previewScheduleId)
             }
         },
-        onReset() {
-            this.seekTo(0)
-        },
         beginPreview() {
             this.audioContextStartTime = this.audioContext.currentTime
-            this.seekTo(this.sliderValue[0])
+            this.seekTo(this.sliderValue)
             this.seekAndScheduleSong()
 
             if (this.playing) {
-                let previewLength = this.sliderValue[1] - this.sliderValue[0]
-                this.previewScheduleId = setTimeout(this.beginPreview, previewLength * 1000)
+                this.previewScheduleId = setTimeout(this.beginPreview, this.previewDuration * 1000)
             }
         },
         seekTo(time) {

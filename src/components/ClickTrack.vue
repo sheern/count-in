@@ -1,18 +1,41 @@
 <template>
-    <div class="click-track">
+    <v-row align="center">
         <!-- TODO validation (e.g. bpm > 0) -->
-        <input class="num-input" v-model.number="clickTrack.bpm" type="number">
-        <span class="units">BPM ({{ secondsPerClick.toFixed(3) }}s per click)</span>
+        <v-col cols="6" sm="2">
+            <v-text-field v-model.number="clickTrack.bpm" type="number"
+                label="BPM"
+                persistent-hint :hint="`${secondsPerClick.toFixed(3)}s per beat`">
+            </v-text-field>
+        </v-col>
 
-        <input class="num-input" v-model.number="clickTrack.beats" type="number">
-        <span class="units">beats</span>
+        <v-col cols="6" sm="2">
+            <v-text-field v-model.number="clickTrack.beats" type="number"
+                label="Total beats">
+            </v-text-field>
+        </v-col>
 
-        <span>Start at </span>
-        <input class="num-input" v-model.number="clickTrack.startTime" type="number">
-        <span class="units">s</span>
-        <input class="start-time-slider" v-model.number="clickTrack.startTime" type="range" min="0" :max="maxStartTime" step="0.01">
-        <button v-on:click="removeClickTrack">Remove</button>
-    </div>
+        <v-col cols="10" sm="7">
+            <v-slider v-model.number="clickTrack.startTime" min="0" :max="maxStartTime" step="0.01"
+                persistent-hint :hint="`Start click track after ${clickTrack.startTime} seconds`">
+                <template v-slot:append>
+                    <v-btn @click="bumpClickStart(-0.1)" icon>
+                        <v-icon color="red">mdi-minus</v-icon>
+                    </v-btn>
+                    <v-btn @click="bumpClickStart(0.1)" icon>
+                        <v-icon color="green">mdi-plus</v-icon>
+                    </v-btn>
+                </template>
+            </v-slider>
+        </v-col>
+        <v-col cols="2" sm="1">
+            <v-btn @click="removeClickTrack"
+                fab x-small>
+                <v-icon color="red">
+                    mdi-trash-can-outline
+                </v-icon>
+            </v-btn>
+        </v-col>
+    </v-row>
 </template>
 
 <script>
@@ -20,13 +43,13 @@ import { computeSecondsPerClick } from '@/utils'
 
 export default {
     name: 'ClickTrack',
-    props: [ 'clickTrack', 'songDuration' ],
+    props: [ 'clickTrack', 'timelineDuration' ],
     computed: {
         secondsPerClick() {
             return computeSecondsPerClick(this.clickTrack.bpm)
         },
         maxStartTime() {
-            return (this.songDuration || 300) + this.songStartTime - this.trackDuration
+            return this.timelineDuration - this.trackDuration
         },
         trackDuration() {
             return this.clickTrack.beats * this.secondsPerClick
@@ -36,13 +59,10 @@ export default {
         removeClickTrack() {
             this.$store.commit('timeline/removeClickTrack', { clickTrackId: this.clickTrack.id })
         },
+        bumpClickStart(amount) {
+            this.clickTrack.startTime += amount
+        },
     },
 }
 </script>
 
-<style>
-.click-track {
-    padding-top: 1em;
-    padding-bottom: 1em;
-}
-</style>
