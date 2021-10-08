@@ -1,5 +1,7 @@
 <template>
     <div>
+        <h1>{{ this.animTimestamp }}</h1>
+
         <v-row no-gutters align="center">
             <v-spacer />
             <v-btn @click="onPlay"
@@ -43,6 +45,10 @@ export default {
     name: 'Player',
     data() {
         return {
+            animFrameStartTime: -1,
+            animTimestamp: 0,
+            songStarted: false,
+
             playing: false,
             previewMode: false,
             previewDuration: 5,
@@ -87,7 +93,14 @@ export default {
                     this.beginPreview()
                 }
                 else {
-                    this.seekAndScheduleSong()
+                    this.seekSpotify()
+                    // Set timeout for a a small amount before the song start time
+                    // This will begin the request animation frame event loop
+                    // I can potentially use this as a shared event loop between
+                    //  scheduling clicks and the song itself instead of maintaining 2
+                    //  In this case, I should immediately requestAnimationFrame and event loop
+                    //   till the playback is stopped
+                    requestAnimationFrame(this.animFrameLoop)
                 }
             }
             else {
@@ -118,6 +131,32 @@ export default {
         },
 
 
+        // Request animation frame loop
+        animFrameLoop(time) {
+            this.animTimestamp = time
+
+            if (!this.playing) {
+                this.animFrameStartTime = -1
+                this.songStarted = false
+                // this.stopSong()
+                return
+            }
+
+            if (this.animFrameStartTime === -1)
+                this.animFrameStartTime = time
+
+            const elapsedSeconds = (time - this.animFrameStartTime) / 1000.0
+            // TODO can possibly subtract 1 or 2ms from the start time since request animation frame matches refresh rate
+            // Right now the elapsed is ~2ms after the actual desired start time
+            if (!this.songStarted && elapsedSeconds >= this.songStartSeconds - this.seekOffsetSeconds) {
+                console.log('Resuming song after', elapsedSeconds)
+                this.spotifyPlayer.resume()
+                this.songStarted = true
+            }
+
+            requestAnimationFrame(this.animFrameLoop)
+        },
+
 
 
         // TODO do this on a web worker thread to unclog main UI thread
@@ -134,6 +173,11 @@ export default {
 
 
 
+        seekSpotify() {
+            let seekTime = this.seekOffsetSeconds - this.songStartSeconds
+            let seekTimeMs = seekTime * 1000
+            this.spotifyPlayer.seek(Math.max(0, seekTimeMs))
+        },
         // Scheduling events
         seekAndScheduleSong() {
             let delay = this.songStartSeconds - this.secondsElapsed()
