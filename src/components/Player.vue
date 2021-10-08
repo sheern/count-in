@@ -98,20 +98,15 @@ export default {
             if (this.playing) {
                 this.audioContext.resume()
 
-                this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
-                requestAnimationFrame(this.triggerEventLoop)
                 if (this.previewMode) {
                     this.beginPreview()
                 }
                 else {
                     this.seekSong()
-                    // Set timeout for a a small amount before the song start time
-                    // This will begin the request animation frame event loop
-                    // I can potentially use this as a shared event loop between
-                    //  scheduling clicks and the song itself instead of maintaining 2
-                    //  In this case, I should immediately requestAnimationFrame and event loop
-                    //   till the playback is stopped
                 }
+
+                this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
+                requestAnimationFrame(this.triggerEventLoop)
             }
             else {
                 // Maintain track position so user can resume
@@ -150,7 +145,7 @@ export default {
         triggerEventLoop() {
             if (!this.playing) {
                 this.stopSong()
-                // this.stopSong()
+                // Stop the event loop by no longer ticking on requestAnimationFrame
                 return
             }
 
