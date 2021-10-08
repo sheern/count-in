@@ -5,10 +5,12 @@
             <ClickTrack :clickTrack="cl" :timelineDuration="timelineDuration" />
         </div>
 
+        <v-divider class="my-4"></v-divider>
         <v-btn @click="addClickTrack"
-            fab absolute bottom right
-            color="primary">
-            <v-icon>
+            block>
+            Add click track
+            <v-icon right
+                color="primary">
                 mdi-metronome
             </v-icon>
         </v-btn>
