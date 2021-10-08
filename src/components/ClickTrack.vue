@@ -14,7 +14,7 @@
             </v-text-field>
         </v-col>
 
-        <v-col cols="10" sm="7">
+        <v-col cols="12" sm="8">
             <v-slider v-model.number="clickTrack.startTime" min="0" :max="maxStartTime" step="0.01"
                 persistent-hint :hint="`Start click track after ${clickTrack.startTime} seconds`">
                 <template v-slot:append>
@@ -24,16 +24,16 @@
                     <v-btn @click="bumpClickStart(0.1)" icon>
                         <v-icon color="green">mdi-plus</v-icon>
                     </v-btn>
+
+                    <v-btn @click="removeClickTrack"
+                        class="ml-1"
+                        fab x-small>
+                        <v-icon color="red">
+                            mdi-trash-can-outline
+                        </v-icon>
+                    </v-btn>
                 </template>
             </v-slider>
-        </v-col>
-        <v-col cols="2" sm="1">
-            <v-btn @click="removeClickTrack"
-                fab x-small>
-                <v-icon color="red">
-                    mdi-trash-can-outline
-                </v-icon>
-            </v-btn>
         </v-col>
     </v-row>
 </template>
