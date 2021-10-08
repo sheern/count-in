@@ -15,8 +15,9 @@
         </v-col>
 
         <v-col cols="12" sm="8">
-            <v-slider v-model.number="clickTrack.startTime" min="0" :max="maxStartTime" step="0.01"
-                persistent-hint :hint="`Start click track after ${clickTrack.startTime} seconds`">
+            <v-slider :value="clickTrack.startTime" @end="onStartTimeSliderRelease" :max="maxStartTime" step="0.01"
+                thumb-label thumb-size="40"
+                persistent-hint :hint="startTimeSliderHint">
                 <template v-slot:append>
                     <v-btn @click="bumpClickStart(-0.1)" icon>
                         <v-icon color="red">mdi-minus</v-icon>
@@ -33,13 +34,16 @@
                         </v-icon>
                     </v-btn>
                 </template>
+                <template v-slot:thumb-label="{ value: startTimeSeconds }">
+                    {{ formatMinutesAndSeconds(startTimeSeconds) }}
+                </template>
             </v-slider>
         </v-col>
     </v-row>
 </template>
 
 <script>
-import { computeSecondsPerClick } from '@/utils'
+import { formatMinutesAndSeconds, computeSecondsPerClick } from '@/utils'
 
 export default {
     name: 'ClickTrack',
@@ -54,8 +58,15 @@ export default {
         trackDuration() {
             return this.clickTrack.beats * this.secondsPerClick
         },
+        startTimeSliderHint() {
+            return `Start click track after ${formatMinutesAndSeconds(this.clickTrack.startTime)} seconds`
+        },
     },
     methods: {
+        formatMinutesAndSeconds,
+        onStartTimeSliderRelease(seconds) {
+            this.clickTrack.startTime = seconds
+        },
         removeClickTrack() {
             this.$store.commit('timeline/removeClickTrack', { clickTrackId: this.clickTrack.id })
         },

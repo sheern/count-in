@@ -1,7 +1,8 @@
 <template>
     <v-container class="pa-0">
-        <v-slider v-model="songStartSeconds" type="number" min="0" max="15" step="0.01"
-            persistent-hint :hint="`Start song after ${songStartSeconds} seconds`">
+        <v-slider :value="songStartSeconds" @end="setSongStartSeconds" type="number" :max="MAX_SONG_START_SECONDS" step="0.01"
+            thumb-label thumb-size="40"
+            persistent-hint :hint="songStartTimeSliderHint">
             <template v-slot:append>
                 <v-btn @click="bumpSongStart(-0.1)" icon>
                     <v-icon color="red">mdi-minus</v-icon>
@@ -9,6 +10,9 @@
                 <v-btn @click="bumpSongStart(0.1)" icon>
                     <v-icon color="green">mdi-plus</v-icon>
                 </v-btn>
+            </template>
+            <template v-slot:thumb-label="{ value: songStartSeconds }">
+                {{ formatMinutesAndSeconds(songStartSeconds) }}
             </template>
         </v-slider>
 
@@ -20,6 +24,8 @@
 
 <script>
 import ClickTracks from '@/components/ClickTracks.vue'
+import { formatMinutesAndSeconds } from '@/utils'
+import { mapState } from 'vuex'
 
 export default {
     name: 'TimelineEditor',
@@ -27,18 +33,22 @@ export default {
         ClickTracks,
     },
     computed: {
-        songStartSeconds: {
-            get() {
-                return this.$store.state.timeline.songStartSeconds
-            },
-            set(seconds) {
-                this.$store.commit('timeline/setSongStartSeconds', { seconds })
-            },
+        ...mapState('timeline', [ 'songStartSeconds' ]),
+        songStartTimeSliderHint() {
+            return `Start song after ${formatMinutesAndSeconds(this.songStartSeconds)} seconds`
+        },
+        MAX_SONG_START_SECONDS() {
+            return 15
         },
     },
     methods: {
+        formatMinutesAndSeconds,
+        setSongStartSeconds(seconds) {
+            if (seconds >= 0 && seconds <= this.MAX_SONG_START_SECONDS)
+                this.$store.commit('timeline/setSongStartSeconds', { seconds })
+        },
         bumpSongStart(amount) {
-            this.songStartSeconds += amount
+            this.setSongStartSeconds(this.songStartSeconds + amount)
         },
     },
 }

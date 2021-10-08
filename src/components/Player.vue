@@ -18,7 +18,7 @@
         <v-row no-gutters class="px-4 pt-6">
             <v-slider :value="timelineSecondsElapsed" @end="onSeekBarRelease"
                 :step="0.1" :max="timelineDuration"
-                :label="formatToMinutesSeconds(timelineSecondsElapsed)"
+                :label="formatMinutesAndSeconds(timelineSecondsElapsed)"
                 thumb-label thumb-size="40"
                 :disabled="playing">
                 <template v-slot:append>
@@ -31,7 +31,7 @@
                     </v-fade-transition>
                 </template>
                 <template v-slot:thumb-label="{ value: sliderSeconds }">
-                    {{ formatToMinutesSeconds(sliderSeconds) }}
+                    {{ formatMinutesAndSeconds(sliderSeconds) }}
                 </template>
             </v-slider>
         </v-row>
@@ -40,7 +40,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
-import { toMinutesAndSeconds } from '@/utils'
+import { formatMinutesAndSeconds } from '@/utils'
 
 const MIN_PREVIEW_DURATION = 3
 // Millis to look ahead when scheduling clicks
@@ -79,10 +79,7 @@ export default {
         ...mapGetters('timeline', [ 'clickEventTimeline', 'timelineDuration' ]),
     },
     methods: {
-        formatToMinutesSeconds(totalSeconds) {
-            const { minutes, seconds } = toMinutesAndSeconds(totalSeconds)
-            return minutes + ':' + seconds.toFixed(1).padStart(4, '0')
-        },
+        formatMinutesAndSeconds,
         // TODO this doesn't do anything in preview mode
         onSeekBarRelease(time) {
             this.playing = false

@@ -1,10 +1,9 @@
 import { v4 as uuid } from 'uuid'
 
-export function toMinutesAndSeconds(seconds) {
-    return {
-        minutes: Math.floor(seconds / 60),
-        seconds: seconds % 60,
-    }
+export function formatMinutesAndSeconds(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return minutes + ':' + seconds.toFixed(1).padStart(4, '0')
 }
 
 export function computeSecondsPerClick(bpm) {
