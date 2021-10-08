@@ -38,13 +38,13 @@ import { toMinutesAndSeconds } from '@/utils'
 // Millis to look ahead when scheduling clicks
 const CLICK_LOOKAROUND = 50 / 1000.0
 
-const ANIM_LOOP_NOT_STARTED = -1
+const EVENT_LOOP_NOT_STARTED = -1
 
 export default {
     name: 'Player',
     data() {
         return {
-            animFrameStartTime: ANIM_LOOP_NOT_STARTED,
+            eventLoopStartTime: EVENT_LOOP_NOT_STARTED,
             timelineSecondsElapsed: 0,
             songStarted: false,
 
@@ -56,15 +56,9 @@ export default {
             // This is non-zero when pausing the track or seeking to a point in the track
             seekOffsetSeconds: 0,
 
-            // The time we use to schedule events
-            audioContextStartTime: 0,
             nextEvent: 0,
-            // setTimeout id of the song resume
-            songScheduleId: 0,
             // setTimeout id of the preview
             previewScheduleId: 0,
-            // setTimeout id of the event loop
-            eventLoopId: 0,
         }
     },
     computed: {
@@ -90,10 +84,9 @@ export default {
 
             if (this.playing) {
                 this.audioContext.resume()
-                this.audioContextStartTime = this.audioContext.currentTime
 
-                this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
-                requestAnimationFrame(this.animFrameLoop)
+                this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
+                requestAnimationFrame(this.triggerEventLoop)
                 if (this.previewMode) {
                     this.beginPreview()
                 }
@@ -119,8 +112,7 @@ export default {
         beginPreview() {
             this.stopSong()
 
-            this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
-            this.audioContextStartTime = this.audioContext.currentTime
+            this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
             this.seekTo(this.sliderValue)
             this.seekSong()
 
@@ -142,7 +134,7 @@ export default {
         // This is most relevant to a click starting at t=0 (since play or preview was started) since any
         //  subsequent click will be pre-empted
         // This suggestion essentially allows pre-empting the first click
-        animFrameLoop() {
+        triggerEventLoop() {
             if (!this.playing) {
                 this.stopSong()
                 // this.stopSong()
@@ -150,32 +142,35 @@ export default {
             }
 
             const currentTime = this.audioContext.currentTime
-            if (this.animFrameStartTime === ANIM_LOOP_NOT_STARTED)
-                this.animFrameStartTime = currentTime
+            if (this.eventLoopStartTime === EVENT_LOOP_NOT_STARTED)
+                this.eventLoopStartTime = currentTime
 
-            const timelineSecondsElapsed = this.seekOffsetSeconds + (currentTime - this.animFrameStartTime)
+            const timelineSecondsElapsed = this.seekOffsetSeconds + (currentTime - this.eventLoopStartTime)
             this.timelineSecondsElapsed = timelineSecondsElapsed
 
-            // TODO can possibly subtract 1 or 2ms from the start time since request animation frame matches refresh rate
-            // Right now the elapsed is ~2ms after the actual desired start time
             if (!this.songStarted && timelineSecondsElapsed >= this.songStartSeconds) {
                 console.log('Resuming song after', timelineSecondsElapsed)
-                this.spotifyPlayer.resume()
-                this.songStarted = true
+                this.resumeSong()
             }
 
             this.scheduleUpcomingClicks(timelineSecondsElapsed)
 
-            requestAnimationFrame(this.animFrameLoop)
+            requestAnimationFrame(this.triggerEventLoop)
         },
+
+
         seekSong() {
             let seekTime = this.seekOffsetSeconds - this.songStartSeconds
             let seekTimeMs = seekTime * 1000
             this.spotifyPlayer.seek(Math.max(0, seekTimeMs))
         },
         stopSong() {
-            this.songStarted = false
             this.spotifyPlayer.pause()
+            this.songStarted = false
+        },
+        resumeSong() {
+            this.spotifyPlayer.resume()
+            this.songStarted = true
         },
 
 
