@@ -23,7 +23,8 @@
                 :disabled="playing">
                 <template v-slot:append>
                     <v-fade-transition>
-                        <v-text-field v-if="previewMode" v-model="previewDuration" type="number" min="5"
+                        <v-text-field v-if="previewMode" v-model="previewDuration" type="number"
+                            :rules="[ previewDurationRule ]"
                             persistent-hint hint="Seconds" label="Preview duration"
                             class="mt-0 pt-0" style="width: 100px">
                         </v-text-field>
@@ -41,6 +42,7 @@
 import { mapState, mapGetters } from 'vuex'
 import { toMinutesAndSeconds } from '@/utils'
 
+const MIN_PREVIEW_DURATION = 3
 // Millis to look ahead when scheduling clicks
 const CLICK_LOOKAROUND = 50 / 1000.0
 
@@ -56,7 +58,12 @@ export default {
 
             playing: false,
             previewMode: false,
-            previewDuration: 5,
+            previewDuration: MIN_PREVIEW_DURATION,
+            previewDurationRule(duration) {
+                if (duration < MIN_PREVIEW_DURATION)
+                    return `Must be at least ${MIN_PREVIEW_DURATION} seconds`
+                return true
+            },
             // The offset applied to elapsed time
             // This is non-zero when pausing the track or seeking to a point in the track
             seekOffsetSeconds: 0,
