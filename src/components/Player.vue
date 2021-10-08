@@ -17,7 +17,7 @@
 
         <v-row no-gutters class="px-4 pt-6">
             <v-slider :value="timelineSecondsElapsed" @end="onSeekBarRelease" :step="0.1" :max="timelineDuration"
-                :label="`${timelineSecondsElapsed.toFixed(2)} seconds`">
+                :label="formattedSecondsElapsed">
                 <template v-slot:append>
                     <v-fade-transition>
                         <v-text-field v-if="previewMode" v-model="previewDuration" type="number" min="5"
@@ -33,6 +33,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
+import { toMinutesAndSeconds } from '@/utils'
 
 // Millis to look ahead when scheduling clicks
 const CLICK_LOOKAROUND = 50 / 1000.0
@@ -70,6 +71,10 @@ export default {
         ...mapState([ 'audioContext', 'spotifyPlayer' ]),
         ...mapState('timeline', [ 'songStartSeconds' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline', 'timelineDuration' ]),
+        formattedSecondsElapsed() {
+            const { minutes, seconds } = toMinutesAndSeconds(this.timelineSecondsElapsed)
+            return minutes + ':' + seconds.toFixed(1).padStart(4, '0')
+        },
     },
     methods: {
         onSeekBarRelease(time) {
@@ -124,6 +129,7 @@ export default {
             }
         },
         seekTo(time) {
+            this.timelineSecondsElapsed = time
             this.seekOffsetSeconds = time
             this.nextEvent = 0
         },

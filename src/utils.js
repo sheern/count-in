@@ -1,5 +1,12 @@
 import { v4 as uuid } from 'uuid'
 
+export function toMinutesAndSeconds(seconds) {
+    return {
+        minutes: Math.floor(seconds / 60),
+        seconds: seconds % 60,
+    }
+}
+
 export function computeSecondsPerClick(bpm) {
     return 60.0 / bpm
 }
