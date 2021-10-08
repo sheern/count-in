@@ -41,11 +41,13 @@ const INTERVAL = 200
 // Millis to look ahead when scheduling events
 const LOOKAHEAD = INTERVAL * 1.25
 
+const ANIM_LOOP_NOT_STARTED = -1
+
 export default {
     name: 'Player',
     data() {
         return {
-            animFrameStartTime: -1,
+            animFrameStartTime: ANIM_LOOP_NOT_STARTED,
             animTimestamp: 0,
             songStarted: false,
 
@@ -89,6 +91,7 @@ export default {
                 this.audioContextStartTime = this.audioContext.currentTime
 
                 this.triggerEventLoop()
+                requestAnimationFrame(this.animFrameLoop)
                 if (this.previewMode) {
                     this.beginPreview()
                 }
@@ -100,7 +103,6 @@ export default {
                     //  scheduling clicks and the song itself instead of maintaining 2
                     //  In this case, I should immediately requestAnimationFrame and event loop
                     //   till the playback is stopped
-                    requestAnimationFrame(this.animFrameLoop)
                 }
             }
             else {
@@ -113,19 +115,19 @@ export default {
             }
         },
         beginPreview() {
+            this.stopSong()
+
+            this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
             this.audioContextStartTime = this.audioContext.currentTime
             this.seekTo(this.sliderValue)
-            this.seekAndScheduleSong()
+            this.seekSpotify()
 
             if (this.playing) {
                 this.previewScheduleId = setTimeout(this.beginPreview, this.previewDuration * 1000)
             }
         },
         seekTo(time) {
-            // Prevent seeking to negative times
-            const safeTime = Math.max(0, time)
-            this.stopSong()
-            this.seekOffsetSeconds = safeTime
+            this.seekOffsetSeconds = time
             this.nextEvent = 0
             this.refreshEventLoop()
         },
@@ -136,13 +138,13 @@ export default {
             this.animTimestamp = time
 
             if (!this.playing) {
-                this.animFrameStartTime = -1
-                this.songStarted = false
+                this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
+                this.stopSong()
                 // this.stopSong()
                 return
             }
 
-            if (this.animFrameStartTime === -1)
+            if (this.animFrameStartTime === ANIM_LOOP_NOT_STARTED)
                 this.animFrameStartTime = time
 
             const elapsedSeconds = (time - this.animFrameStartTime) / 1000.0
@@ -179,16 +181,8 @@ export default {
             this.spotifyPlayer.seek(Math.max(0, seekTimeMs))
         },
         // Scheduling events
-        seekAndScheduleSong() {
-            let delay = this.songStartSeconds - this.secondsElapsed()
-            let delayMs = delay * 1000
-            // If we are in the middle of the song (i.e. delay is negative), we should seek to -delayMs
-            // If we are before the start of the song (i.e. delay is >= 0), we should seek to 0 to reset the song
-            this.spotifyPlayer.seek(Math.max(0, -delayMs))
-            this.songScheduleId = setTimeout(() => this.spotifyPlayer.resume(), Math.max(0, delayMs))
-        },
         stopSong() {
-            clearTimeout(this.songScheduleId)
+            this.songStarted = false
             this.spotifyPlayer.pause()
         },
         scheduleUpcomingEvents() {
