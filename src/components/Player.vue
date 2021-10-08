@@ -111,7 +111,6 @@ export default {
             else {
                 // Maintain track position so user can resume
                 this.seekOffsetSeconds = this.timelineSecondsElapsed
-                this.sliderValue = this.seekOffsetSeconds
                 this.stopSong()
 
                 clearTimeout(this.previewScheduleId)
@@ -120,10 +119,12 @@ export default {
         beginPreview() {
             this.stopSong()
 
-            this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
-            this.seekTo(this.sliderValue)
+            this.seekTo(this.seekOffsetSeconds)
             this.seekSong()
 
+            // This serves as a refresh flag for the event loop
+            // The next time it is triggered, the start time will be set
+            this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
             if (this.playing) {
                 this.previewScheduleId = setTimeout(this.beginPreview, this.previewDuration * 1000)
             }
