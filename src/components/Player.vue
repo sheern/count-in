@@ -34,10 +34,8 @@
 <script>
 import { mapState, mapGetters } from 'vuex'
 
-// Event loop frequency
-const INTERVAL = 200
-// Millis to look ahead when scheduling events
-const LOOKAHEAD = INTERVAL * 1.25
+// Millis to look ahead when scheduling clicks
+const CLICK_LOOKAROUND = 50 / 1000.0
 
 const ANIM_LOOP_NOT_STARTED = -1
 
@@ -46,7 +44,7 @@ export default {
     data() {
         return {
             animFrameStartTime: ANIM_LOOP_NOT_STARTED,
-            animTimestamp: 0,
+            timelineSecondsElapsed: 0,
             songStarted: false,
 
             playing: false,
@@ -77,7 +75,7 @@ export default {
         onSliderEnd() {
             console.log('Seek bar released')
             this.playing = false
-            this.seekOffsetSeconds = this.sliderValue
+            this.seekTo(this.sliderValue)
             this.stopSong()
             clearTimeout(this.previewScheduleId)
         },
@@ -88,13 +86,13 @@ export default {
                 this.audioContext.resume()
                 this.audioContextStartTime = this.audioContext.currentTime
 
-                this.triggerEventLoop()
+                this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
                 requestAnimationFrame(this.animFrameLoop)
                 if (this.previewMode) {
                     this.beginPreview()
                 }
                 else {
-                    this.seekSpotify()
+                    this.seekSong()
                     // Set timeout for a a small amount before the song start time
                     // This will begin the request animation frame event loop
                     // I can potentially use this as a shared event loop between
@@ -105,7 +103,7 @@ export default {
             }
             else {
                 // Maintain track position so user can resume
-                this.seekOffsetSeconds = this.secondsElapsed()
+                this.seekOffsetSeconds = this.timelineSecondsElapsed
                 this.sliderValue = this.seekOffsetSeconds
                 this.stopSong()
 
@@ -118,7 +116,7 @@ export default {
             this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
             this.audioContextStartTime = this.audioContext.currentTime
             this.seekTo(this.sliderValue)
-            this.seekSpotify()
+            this.seekSong()
 
             if (this.playing) {
                 this.previewScheduleId = setTimeout(this.beginPreview, this.previewDuration * 1000)
@@ -127,70 +125,63 @@ export default {
         seekTo(time) {
             this.seekOffsetSeconds = time
             this.nextEvent = 0
-            this.refreshEventLoop()
         },
 
 
         // Request animation frame loop
-        animFrameLoop(time) {
-            this.animTimestamp = time
-
+        // TODO I should add a small constant BUMP to all events scheduled times (including song)
+        // There seems to be issue with starting an oscillator node even just a tiny bit before
+        //  the AudioContext.currentTime, with glitching (which makes sense, there's a jump in the waveform)
+        // This is most relevant to a click starting at t=0 (since play or preview was started) since any
+        //  subsequent click will be pre-empted
+        // This suggestion essentially allows pre-empting the first click
+        animFrameLoop() {
             if (!this.playing) {
-                this.animFrameStartTime = ANIM_LOOP_NOT_STARTED
                 this.stopSong()
                 // this.stopSong()
                 return
             }
 
+            const currentTime = this.audioContext.currentTime
             if (this.animFrameStartTime === ANIM_LOOP_NOT_STARTED)
-                this.animFrameStartTime = time
+                this.animFrameStartTime = currentTime
 
-            const elapsedSeconds = (time - this.animFrameStartTime) / 1000.0
+            const timelineSecondsElapsed = this.seekOffsetSeconds + (currentTime - this.animFrameStartTime)
+            this.timelineSecondsElapsed = timelineSecondsElapsed
+
             // TODO can possibly subtract 1 or 2ms from the start time since request animation frame matches refresh rate
             // Right now the elapsed is ~2ms after the actual desired start time
-            if (!this.songStarted && elapsedSeconds >= this.songStartSeconds - this.seekOffsetSeconds) {
-                console.log('Resuming song after', elapsedSeconds)
+            if (!this.songStarted && timelineSecondsElapsed >= this.songStartSeconds) {
+                console.log('Resuming song after', timelineSecondsElapsed)
                 this.spotifyPlayer.resume()
                 this.songStarted = true
             }
 
+            this.scheduleUpcomingClicks(timelineSecondsElapsed)
+
             requestAnimationFrame(this.animFrameLoop)
         },
-
-
-
-        // TODO do this on a web worker thread to unclog main UI thread
-        triggerEventLoop() {
-            this.scheduleUpcomingEvents()
-
-            if (this.playing)
-                this.eventLoopId = setTimeout(this.triggerEventLoop, INTERVAL)
-        },
-        refreshEventLoop() {
-            clearTimeout(this.eventLoopId)
-            this.triggerEventLoop()
-        },
-
-
-
-        seekSpotify() {
+        seekSong() {
             let seekTime = this.seekOffsetSeconds - this.songStartSeconds
             let seekTimeMs = seekTime * 1000
             this.spotifyPlayer.seek(Math.max(0, seekTimeMs))
         },
-        // Scheduling events
         stopSong() {
             this.songStarted = false
             this.spotifyPlayer.pause()
         },
-        scheduleUpcomingEvents() {
-            let windowBegin = this.secondsElapsed()
-            let windowEnd = windowBegin + (LOOKAHEAD / 1000.0)
+
+
+        scheduleUpcomingClicks(timelineSecondsElapsed) {
+            // Negative bump to pre-empt t=0 click, fix later
+            let windowBegin = timelineSecondsElapsed - CLICK_LOOKAROUND
+            let windowEnd = timelineSecondsElapsed + CLICK_LOOKAROUND
 
             for (let index = this.nextEvent; index < this.clickEventTimeline.length; index++) {
                 let event = this.clickEventTimeline[index]
                 if (event.time >= windowBegin && event.time < windowEnd) {
-                    this.scheduleClick(event.time)
+                    console.log('Scheduling click', event.time)
+                    this.scheduleClick(event.time, timelineSecondsElapsed)
                     // Don't need to schedule this event in the next loop, only process remaining
                     this.nextEvent = index + 1
                 }
@@ -201,20 +192,16 @@ export default {
                 }
             }
         },
-        scheduleClick(time) {
+        scheduleClick(time, timelineSecondsElapsed) {
             let osc = this.audioContext.createOscillator()
             osc.frequency.value = 220
             osc.connect(this.audioContext.destination)
 
             // Floor at 0 for the very first click
-            let secondsTillClick = Math.max(0, time - this.secondsElapsed())
+            let secondsTillClick = Math.max(0, time - timelineSecondsElapsed)
             let clickStart = this.audioContext.currentTime + secondsTillClick
             osc.start(clickStart)
             osc.stop(clickStart + 0.025)
-        },
-
-        secondsElapsed() {
-            return this.seekOffsetSeconds + (this.audioContext.currentTime - this.audioContextStartTime)
         },
     },
 }
