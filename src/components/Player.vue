@@ -16,8 +16,11 @@
         </v-row>
 
         <v-row no-gutters class="px-4 pt-6">
-            <v-slider :value="timelineSecondsElapsed" @end="onSeekBarRelease" :step="0.1" :max="timelineDuration"
-                :label="formattedSecondsElapsed">
+            <v-slider :value="timelineSecondsElapsed" @end="onSeekBarRelease"
+                :step="0.1" :max="timelineDuration"
+                :label="formatToMinutesSeconds(timelineSecondsElapsed)"
+                thumb-label thumb-size="40"
+                :disabled="playing">
                 <template v-slot:append>
                     <v-fade-transition>
                         <v-text-field v-if="previewMode" v-model="previewDuration" type="number" min="5"
@@ -25,6 +28,9 @@
                             class="mt-0 pt-0" style="width: 100px">
                         </v-text-field>
                     </v-fade-transition>
+                </template>
+                <template v-slot:thumb-label="{ value: sliderSeconds }">
+                    {{ formatToMinutesSeconds(sliderSeconds) }}
                 </template>
             </v-slider>
         </v-row>
@@ -51,7 +57,6 @@ export default {
             playing: false,
             previewMode: false,
             previewDuration: 5,
-            sliderValue: 0,
             // The offset applied to elapsed time
             // This is non-zero when pausing the track or seeking to a point in the track
             seekOffsetSeconds: 0,
@@ -65,12 +70,13 @@ export default {
         ...mapState([ 'audioContext', 'spotifyPlayer' ]),
         ...mapState('timeline', [ 'songStartSeconds' ]),
         ...mapGetters('timeline', [ 'clickEventTimeline', 'timelineDuration' ]),
-        formattedSecondsElapsed() {
-            const { minutes, seconds } = toMinutesAndSeconds(this.timelineSecondsElapsed)
-            return minutes + ':' + seconds.toFixed(1).padStart(4, '0')
-        },
     },
     methods: {
+        formatToMinutesSeconds(totalSeconds) {
+            const { minutes, seconds } = toMinutesAndSeconds(totalSeconds)
+            return minutes + ':' + seconds.toFixed(1).padStart(4, '0')
+        },
+        // TODO this doesn't do anything in preview mode
         onSeekBarRelease(time) {
             this.playing = false
             this.seekTo(time)
