@@ -16,8 +16,8 @@
         </v-row>
 
         <v-row no-gutters class="px-4 pt-6">
-            <v-slider v-model.number="sliderValue" @end="onSliderEnd" :step="0.1" :max="timelineDuration"
-                      label="Seek to" :hint="`${sliderValue} seconds`" persistent-hint>
+            <v-slider :value="timelineSecondsElapsed" @end="onSeekBarRelease" :step="0.1" :max="timelineDuration"
+                :label="`${timelineSecondsElapsed.toFixed(2)} seconds`">
                 <template v-slot:append>
                     <v-fade-transition>
                         <v-text-field v-if="previewMode" v-model="previewDuration" type="number" min="5"
@@ -72,12 +72,13 @@ export default {
         ...mapGetters('timeline', [ 'clickEventTimeline', 'timelineDuration' ]),
     },
     methods: {
-        onSliderEnd() {
-            console.log('Seek bar released')
+        onSeekBarRelease(time) {
             this.playing = false
-            this.seekTo(this.sliderValue)
+            this.seekTo(time)
             this.stopSong()
             clearTimeout(this.previewScheduleId)
+
+            console.log('Seek bar released', time)
         },
         onPlay() {
             this.playing = !this.playing
