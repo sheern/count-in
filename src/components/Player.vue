@@ -1,7 +1,5 @@
 <template>
     <div>
-        <h1>{{ this.animTimestamp }}</h1>
-
         <v-row no-gutters align="center">
             <v-spacer />
             <v-btn @click="onPlay"
@@ -10,7 +8,7 @@
                     {{ playing ? 'mdi-pause' : 'mdi-play' }}
                 </v-icon>
             </v-btn>
-            <v-btn @click="previewMode = !previewMode"
+            <v-btn :disabled="playing" @click="previewMode = !previewMode"
                 rounded class="mx-1" :color="previewMode ? 'primary' : ''">
                 Preview mode
             </v-btn>
