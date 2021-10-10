@@ -78,7 +78,13 @@ export default {
             localStorage.setItem(SAVED_SCENES_KEY, JSON.stringify(this.storedScenes))
         },
         loadScenesFromLocalStorage() {
-            this.storedScenes = JSON.parse(localStorage.getItem(SAVED_SCENES_KEY)) || {}
+            // TODO: Do schema validation in the future
+            try {
+                this.storedScenes = JSON.parse(localStorage.getItem(SAVED_SCENES_KEY)) || {}
+            }
+            catch (e) {
+                this.storedScenes = {}
+            }
         },
     },
     created() {
