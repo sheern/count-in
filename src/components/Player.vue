@@ -97,7 +97,7 @@ export default {
                 this.audioContext.resume()
 
                 if (this.sectionMode) {
-                    this.beginSection()
+                    this.playSection()
                 }
                 else {
                     this.seekSong()
@@ -114,7 +114,7 @@ export default {
                 clearTimeout(this.sectionScheduleId)
             }
         },
-        beginSection() {
+        playSection() {
             this.stopSong()
 
             this.seekTo(this.seekOffsetSeconds)
@@ -124,7 +124,7 @@ export default {
             // The next time it is triggered, the start time will be set
             this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
             if (this.playing) {
-                this.sectionScheduleId = setTimeout(this.beginSection, this.sectionDuration * 1000)
+                this.sectionScheduleId = setTimeout(this.playSection, this.sectionDuration * 1000)
             }
         },
         seekTo(time) {
