@@ -45,7 +45,8 @@ import { formatMinutesAndSeconds } from '@/utils'
 
 const MIN_SECTION_DURATION = 3
 // Millis to look ahead when scheduling clicks
-const CLICK_LOOKAROUND = 50 / 1000.0
+const CLICK_LOOKAHEAD = 50 / 1000.0
+const NUDGE_SECONDS = 100 / 1000.0
 
 const EVENT_LOOP_NOT_STARTED = -1
 
@@ -182,21 +183,22 @@ export default {
 
 
         scheduleUpcomingClicks(timelineSecondsElapsed) {
-            // Negative bump to pre-empt t=0 click, fix later
-            let windowBegin = timelineSecondsElapsed - CLICK_LOOKAROUND
-            let windowEnd = timelineSecondsElapsed + CLICK_LOOKAROUND
+            // Negative half-nudge to catch any barely missed clicks (due to negligible time passed since starting event loop)
+            let windowBegin = timelineSecondsElapsed - (NUDGE_SECONDS / 2)
+            let windowEnd = timelineSecondsElapsed + CLICK_LOOKAHEAD
 
             for (let index = this.nextEvent; index < this.clickEventTimeline.length; index++) {
                 let event = this.clickEventTimeline[index]
-                if (event.time >= windowBegin && event.time < windowEnd) {
-                    console.log('Scheduling click', event.time)
-                    this.scheduleClick(event.time, timelineSecondsElapsed)
+                let nudgedEventTime = this.nudge(event.time)
+                if (nudgedEventTime >= windowBegin && nudgedEventTime < windowEnd) {
+                    console.log('Scheduling click', nudgedEventTime)
+                    this.scheduleClick(nudgedEventTime, timelineSecondsElapsed)
                     // Don't need to schedule this event in the next loop, only process remaining
                     this.nextEvent = index + 1
                 }
 
                 // Remaining events are not ready to be scheduled
-                if (event.time >= windowEnd) {
+                if (nudgedEventTime >= windowEnd) {
                     break
                 }
             }
@@ -211,6 +213,10 @@ export default {
             let clickStart = this.audioContext.currentTime + secondsTillClick
             osc.start(clickStart)
             osc.stop(clickStart + 0.025)
+        },
+
+        nudge(seconds) {
+            return seconds + NUDGE_SECONDS
         },
     },
 }
