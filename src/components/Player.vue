@@ -8,9 +8,9 @@
                     {{ playing ? 'mdi-pause' : 'mdi-play' }}
                 </v-icon>
             </v-btn>
-            <v-btn :disabled="playing" @click="previewMode = !previewMode"
-                rounded class="mx-1" :color="previewMode ? 'primary' : ''">
-                Preview mode
+            <v-btn :disabled="playing" @click="sectionMode = !sectionMode"
+                rounded class="mx-1" :color="sectionMode ? 'primary' : ''">
+                Section mode
             </v-btn>
             <v-spacer />
         </v-row>
@@ -24,9 +24,9 @@
                 :disabled="playing">
                 <template v-slot:append>
                     <v-fade-transition>
-                        <v-text-field v-if="previewMode" v-model="previewDuration" type="number"
-                            :rules="[ previewDurationRule ]"
-                            persistent-hint hint="Seconds" label="Preview duration"
+                        <v-text-field v-if="sectionMode" v-model="sectionDuration" type="number"
+                            :rules="[ sectionDurationRule ]"
+                            persistent-hint hint="Seconds" label="Section duration"
                             class="mt-0 pt-0" style="width: 100px">
                         </v-text-field>
                     </v-fade-transition>
@@ -43,7 +43,7 @@
 import { mapState, mapGetters } from 'vuex'
 import { formatMinutesAndSeconds } from '@/utils'
 
-const MIN_PREVIEW_DURATION = 3
+const MIN_SECTION_DURATION = 3
 // Millis to look ahead when scheduling clicks
 const CLICK_LOOKAROUND = 50 / 1000.0
 
@@ -58,11 +58,11 @@ export default {
             songStarted: false,
 
             playing: false,
-            previewMode: false,
-            previewDuration: MIN_PREVIEW_DURATION,
-            previewDurationRule(duration) {
-                if (duration < MIN_PREVIEW_DURATION)
-                    return `Must be at least ${MIN_PREVIEW_DURATION} seconds`
+            sectionMode: false,
+            sectionDuration: MIN_SECTION_DURATION,
+            sectionDurationRule(duration) {
+                if (duration < MIN_SECTION_DURATION)
+                    return `Must be at least ${MIN_SECTION_DURATION} seconds`
                 return true
             },
             // The offset applied to elapsed time
@@ -70,8 +70,8 @@ export default {
             seekOffsetSeconds: 0,
 
             nextEvent: 0,
-            // setTimeout id of the preview
-            previewScheduleId: 0,
+            // setTimeout id of the section
+            sectionScheduleId: 0,
         }
     },
     computed: {
@@ -81,12 +81,12 @@ export default {
     },
     methods: {
         formatMinutesAndSeconds,
-        // TODO this doesn't do anything in preview mode
+        // TODO this doesn't do anything in section mode
         onSeekBarRelease(time) {
             this.playing = false
             this.seekTo(time)
             this.stopSong()
-            clearTimeout(this.previewScheduleId)
+            clearTimeout(this.sectionScheduleId)
 
             console.log('Seek bar released', time)
         },
@@ -96,8 +96,8 @@ export default {
             if (this.playing) {
                 this.audioContext.resume()
 
-                if (this.previewMode) {
-                    this.beginPreview()
+                if (this.sectionMode) {
+                    this.beginSection()
                 }
                 else {
                     this.seekSong()
@@ -111,10 +111,10 @@ export default {
                 this.seekOffsetSeconds = this.timelineSecondsElapsed
                 this.stopSong()
 
-                clearTimeout(this.previewScheduleId)
+                clearTimeout(this.sectionScheduleId)
             }
         },
-        beginPreview() {
+        beginSection() {
             this.stopSong()
 
             this.seekTo(this.seekOffsetSeconds)
@@ -124,7 +124,7 @@ export default {
             // The next time it is triggered, the start time will be set
             this.eventLoopStartTime = EVENT_LOOP_NOT_STARTED
             if (this.playing) {
-                this.previewScheduleId = setTimeout(this.beginPreview, this.previewDuration * 1000)
+                this.sectionScheduleId = setTimeout(this.beginSection, this.sectionDuration * 1000)
             }
         },
         seekTo(time) {
@@ -138,7 +138,7 @@ export default {
         // TODO I should add a small constant BUMP to all events scheduled times (including song)
         // There seems to be issue with starting an oscillator node even just a tiny bit before
         //  the AudioContext.currentTime, with glitching (which makes sense, there's a jump in the waveform)
-        // This is most relevant to a click starting at t=0 (since play or preview was started) since any
+        // This is most relevant to a click starting at t=0 (since play or section was started) since any
         //  subsequent click will be pre-empted
         // This suggestion essentially allows pre-empting the first click
         triggerEventLoop() {
