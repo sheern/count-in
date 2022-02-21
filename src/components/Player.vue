@@ -19,7 +19,6 @@
             <v-slider :value="timelineSecondsElapsed" @end="onSeekBarRelease"
                 :step="0.1" :max="timelineDuration"
                 :label="formatMinutesAndSeconds(timelineSecondsElapsed)"
-                nolabel
                 thumb-label thumb-size="40"
                 :disabled="playing">
                 <template v-slot:append>

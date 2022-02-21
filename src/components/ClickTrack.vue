@@ -16,8 +16,8 @@
 
         <v-col cols="12" sm="8">
             <v-slider :value="clickTrack.startTime" @end="onStartTimeSliderRelease" :max="maxStartTime" step="0.01"
-                thumb-label thumb-size="40"
-                persistent-hint :hint="startTimeSliderHint">
+            :label="startTimeSliderHint"
+            thumb-label thumb-size="40">
                 <template v-slot:append>
                     <v-btn @click="bumpClickStart(-0.1)" icon>
                         <v-icon color="red">mdi-minus</v-icon>
@@ -59,7 +59,7 @@ export default {
             return this.clickTrack.beats * this.secondsPerClick
         },
         startTimeSliderHint() {
-            return `Start click track after ${formatMinutesAndSeconds(this.clickTrack.startTime)} seconds`
+            return `Start at ${formatMinutesAndSeconds(this.clickTrack.startTime)}`
         },
     },
     methods: {
