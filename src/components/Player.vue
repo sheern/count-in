@@ -25,8 +25,8 @@
                     <v-fade-transition>
                         <v-text-field v-if="sectionMode" v-model="sectionDuration" type="number"
                             :rules="[ sectionDurationRule ]"
-                            persistent-hint hint="Seconds" label="Section duration"
-                            class="mt-0 pt-0" style="width: 100px">
+                            label="Section duration (seconds)"
+                            class="mt-0 pt-0">
                         </v-text-field>
                     </v-fade-transition>
                 </template>

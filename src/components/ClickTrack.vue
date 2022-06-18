@@ -3,8 +3,7 @@
         <!-- TODO validation (e.g. bpm > 0) -->
         <v-col cols="6" sm="2">
             <v-text-field v-model.number="clickTrack.bpm" type="number"
-                label="BPM"
-                persistent-hint :hint="`${secondsPerClick.toFixed(3)}s per beat`">
+                label="BPM">
             </v-text-field>
         </v-col>
 
